@@ -153,11 +153,10 @@ public class ApiDispatcher {
                         queueSizeLimit = 1L;
                     }
 
-                    if (queueSizeLimit != null) {
+                if (queueSizeLimit != null) {
                     _asyncMgr.syncAsyncJobExecution(asyncCmd.getJob(), asyncCmd.getSyncObjType(), asyncCmd.getSyncObjId().longValue(), queueSizeLimit);
-                    } else {
-                        s_logger.trace("The queue size is unlimited, skipping the synchronizing");
-                    }
+                } else {
+                    s_logger.trace("The queue size is unlimited, skipping the synchronizing");
                 }
             }
 
@@ -371,8 +370,13 @@ public class ApiDispatcher {
         if (internalId == null) {
             if (s_logger.isDebugEnabled())
                 s_logger.debug("Object entity uuid = " + uuid + " does not exist in the database.");
+<<<<<<< HEAD
             throw new InvalidParameterValueException("Invalid parameter " + annotation.name() + " value=" + uuid
                 + " due to incorrect long value format, or entity does not exist or due to incorrect parameter annotation for the field in api cmd class.");
+=======
+            throw new InvalidParameterValueException("Invalid parameter value=" + uuid
+                + " due to incorrect long value format, or entity was not found as it may have been deleted, or due to incorrect parameter annotation for the field in api cmd.");
+>>>>>>> ApiDispatcher: Fix uuid->id translation and throw better debug statement
         }
         return internalId;
     }
