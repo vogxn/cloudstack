@@ -172,6 +172,7 @@
     <module>services</module>
     <module>test</module>
     <module>client</module>
+    <module>setup</module>
   </modules>
 
   <dependencyManagement>
