@@ -173,6 +173,7 @@
     <module>services</module>
     <module>test</module>
     <module>client</module>
+    <module>setup</module>
   </modules>
 
   <dependencyManagement>
@@ -439,7 +440,6 @@
               <exclude>patches/systemvm/debian/config/var/www/html/userdata/.htaccess</exclude>
               <exclude>patches/systemvm/debian/config/var/www/html/latest/.htaccess</exclude>
               <exclude>patches/systemvm/debian/vpn/etc/ipsec.d/l2tp.conf</exclude>
-
             </excludes>
           </configuration>
         </plugin>
