@@ -88,7 +88,6 @@
     <profile>
       <id>marvin</id>
       <activation>
-        <property><name>marvin.config</name></property>
       </activation>
       <build>
         <plugins>
