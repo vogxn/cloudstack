@@ -21,11 +21,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.HttpsURLConnection;
 import javax.xml.ws.BindingProvider;
+import javax.xml.ws.handler.MessageContext;
+
 
 import com.vmware.vim25.DynamicProperty;
 import com.vmware.vim25.InvalidCollectorVersionFaultMsg;
@@ -94,6 +97,7 @@ public class VmwareClient {
     private VimService vimService;
     private VimPortType vimPort;
     private ServiceContent serviceContent;
+    private String serviceCookie;
     private final String SVC_INST_NAME = "ServiceInstance";
 
     private boolean isConnected = false;
@@ -133,6 +137,17 @@ public class VmwareClient {
         ctxt.put("com.sun.xml.internal.ws.connect.timeout", 600000);
 
         serviceContent = vimPort.retrieveServiceContent(SVC_INST_REF);
+
+        // Extract a cookie. See vmware sample program com.vmware.httpfileaccess.GetVMFiles
+        Map<String, List<String>> headers = (Map<String, List<String>>) ((BindingProvider) vimPort)
+                .getResponseContext().get(MessageContext.HTTP_RESPONSE_HEADERS);
+        List<String> cookies = (List<String>) headers.get("Set-cookie");
+        String cookieValue = cookies.get(0);
+        StringTokenizer tokenizer = new StringTokenizer(cookieValue, ";");
+        cookieValue = tokenizer.nextToken();
+        String pathData = "$" + tokenizer.nextToken();
+        serviceCookie = "$Version=\"1\"; " + cookieValue + "; " + pathData;
+
         vimPort.login(serviceContent.getSessionManager(), userName, password, null);
         isConnected = true;
 
@@ -164,6 +179,13 @@ public class VmwareClient {
      */
     public ServiceContent getServiceContent() {
         return serviceContent;
+    }
+
+    /**
+     * @return cookie used in service connection
+     */
+    public String getServiceCookie() {
+        return serviceCookie;
     }
 
     /**

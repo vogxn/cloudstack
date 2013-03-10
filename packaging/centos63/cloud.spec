@@ -108,6 +108,7 @@ The Apache CloudStack files shared between agent and management server
 %package agent
 Summary: CloudStack Agent for KVM hypervisors
 Requires: java >= 1.6.0
+Requires: jna >= 3.2.4
 Requires: %{name}-common = %{_ver}
 Requires: libvirt
 Requires: bridge-utils
@@ -115,6 +116,7 @@ Requires: ebtables
 Requires: jsvc
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-daemon-jsvc
+Requires: perl
 Provides: cloud-agent
 Obsoletes: cloud-agent < 4.1.0
 Obsoletes: cloud-test < 4.1.0
@@ -255,13 +257,14 @@ chmod 770 ${RPM_BUILD_ROOT}%{_localstatedir}/log/%{name}/agent
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/log/%{name}/agent
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/lib
+mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/plugins
 install -D packaging/centos63/cloud-agent.rc ${RPM_BUILD_ROOT}%{_sysconfdir}/init.d/%{name}-agent
 install -D agent/target/transformed/agent.properties ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent/agent.properties
 install -D agent/target/transformed/environment.properties ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent/environment.properties
 install -D agent/target/transformed/log4j-cloud.xml ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/agent/log4j-cloud.xml
 install -D agent/target/transformed/cloud-setup-agent ${RPM_BUILD_ROOT}%{_bindir}/%{name}-setup-agent
 install -D agent/target/transformed/cloud-ssh ${RPM_BUILD_ROOT}%{_bindir}/%{name}-ssh
-install -D plugins/hypervisors/kvm/target/cloud-plugin-hypervisor-kvm-%{_maventag}.jar ${RPM_BUILD_ROOT}%{_datadir}/%name-agent/cloud-plugin-hypervisor-kvm-%{_maventag}.jar
+install -D plugins/hypervisors/kvm/target/cloud-plugin-hypervisor-kvm-%{_maventag}.jar ${RPM_BUILD_ROOT}%{_datadir}/%name-agent/lib/cloud-plugin-hypervisor-kvm-%{_maventag}.jar
 cp plugins/hypervisors/kvm/target/dependencies/*  ${RPM_BUILD_ROOT}%{_datadir}/%{name}-agent/lib
 
 # Usage server
@@ -320,7 +323,10 @@ fi
 
 # change cloud user's home to 4.1+ version if needed. Would do this via 'usermod', but it
 # requires that cloud user not be in use, so RPM could not be installed while management is running
-getent passwd cloud | grep -q /var/lib/cloud && sed -i 's/\/var\/lib\/cloud\/management/\/var\/cloudstack\/management/g' /etc/passwd
+if getent passwd cloud | grep -q /var/lib/cloud; then 
+    sed -i 's/\/var\/lib\/cloud\/management/\/var\/cloudstack\/management/g' /etc/passwd
+fi
+
 
 %post awsapi
 if [ -d "%{_datadir}/%{name}-management" ] ; then
@@ -393,8 +399,8 @@ fi
 %attr(0755,root,root) %{_sysconfdir}/init.d/%{name}-agent
 %config(noreplace) %{_sysconfdir}/%{name}/agent
 %dir %{_localstatedir}/log/%{name}/agent
-%attr(0644,root,root) %{_datadir}/%{name}-agent/*.jar
 %attr(0644,root,root) %{_datadir}/%{name}-agent/lib/*.jar
+%dir %{_datadir}/%{name}-agent/plugins
 %doc LICENSE
 %doc NOTICE
 

@@ -86,6 +86,7 @@ import com.cloud.dc.dao.AccountVlanMapDao;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.DataCenterIpAddressDao;
+import com.cloud.dc.dao.DataCenterLinkLocalIpAddressDao;
 import com.cloud.dc.dao.DataCenterLinkLocalIpAddressDaoImpl;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.PodVlanMapDao;
@@ -249,7 +250,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     VpcManager _vpcMgr;
 
     // FIXME - why don't we have interface for DataCenterLinkLocalIpAddressDao?
-    @Inject protected DataCenterLinkLocalIpAddressDaoImpl _LinkLocalIpAllocDao;
+    @Inject protected DataCenterLinkLocalIpAddressDao _LinkLocalIpAllocDao;
 
     private int _maxVolumeSizeInGb;
     private long _defaultPageSize;
@@ -2329,10 +2330,10 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         Vlan vlan = createVlanAndPublicIpRange(zoneId, networkId, physicalNetworkId, forVirtualNetwork, podId, startIP, 
                 endIP, vlanGateway, vlanNetmask, vlanId, vlanOwner, startIPv6, endIPv6, ip6Gateway, ip6Cidr);
 
+        txn.commit();
         if (associateIpRangeToAccount) {
             _networkMgr.associateIpAddressListToAccount(userId, vlanOwner.getId(), zoneId, vlan.getId(), null);
         }
-        txn.commit();
 
         // Associate ips to the network
         if (associateIpRangeToAccount) {

@@ -241,6 +241,7 @@ UPDATE `cloud`.`volumes` set uuid=id WHERE uuid is NULL;
 -- UPDATE `cloud`.`conditions` set uuid=id WHERE uuid is NULL;
 
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'detail.batch.query.size', '2000', 'Default entity detail batch query size for listing');
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'api.throttling.enabled', 'false', 'Enable/Disable Api rate limit');
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'api.throttling.interval', '1', 'Time interval (in seconds) to reset API count');
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'api.throttling.max', '25', 'Max allowed number of APIs within fixed interval');
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'api.throttling.cachesize', '50000', 'Account based API count cache size');
@@ -251,6 +252,8 @@ ALTER TABLE `cloud`.`op_dc_vnet_alloc` DROP INDEX i_op_dc_vnet_alloc__vnet__data
 
 ALTER TABLE `cloud`.`op_dc_vnet_alloc` ADD CONSTRAINT UNIQUE `i_op_dc_vnet_alloc__vnet__data_center_id`(`vnet`, `physical_network_id`, `data_center_id`);
 
+ALTER TABLE `cloud`.`op_dc_vnet_alloc` DROP INDEX i_op_dc_vnet_alloc__vnet__data_center_id__account_id;
+
 CREATE TABLE  `cloud`.`region` (
   `id` int unsigned NOT NULL UNIQUE,
   `name` varchar(255) NOT NULL UNIQUE,
@@ -259,6 +262,7 @@ CREATE TABLE  `cloud`.`region` (
   `secret_key` varchar(255),
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 INSERT INTO `cloud`.`region` values ('1','Local','http://localhost:8080/client/api','','');
 

@@ -14,11 +14,25 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package org.apache.cloudstack.region.dao;
+package com.cloud.dc.dao;
 
-import org.apache.cloudstack.region.RegionSyncVO;
+import java.util.List;
 
+import com.cloud.dc.DataCenterVnetVO;
 import com.cloud.utils.db.GenericDao;
 
-public interface RegionSyncDao extends GenericDao<RegionSyncVO, Integer> {
+public interface DataCenterVnetDao extends GenericDao<DataCenterVnetVO, Long> {
+    public List<DataCenterVnetVO> listAllocatedVnets(long physicalNetworkId);
+    public List<DataCenterVnetVO> findVnet(long dcId, String vnet);   
+    public int countZoneVlans(long dcId, boolean onlyCountAllocated);    
+    public List<DataCenterVnetVO> findVnet(long dcId, long physicalNetworkId, String vnet);
+    
+    public void add(long dcId, long physicalNetworkId, int start, int end);
+    
+    public void delete(long physicalNetworkId);
+
+    public DataCenterVnetVO take(long physicalNetworkId, long accountId, String reservationId);
+
+    public void release(String vnet, long physicalNetworkId, long accountId, String reservationId);
+
 }

@@ -14,15 +14,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.storage.dao;
+package com.cloud.dc.dao;
 
-import java.util.Map;
+import java.util.List;
 
-import com.cloud.storage.StoragePoolDetailVO;
+import com.cloud.dc.PodVlanVO;
 import com.cloud.utils.db.GenericDao;
 
-public interface StoragePoolDetailsDao extends GenericDao<StoragePoolDetailVO, Long> {
-    
-    void update(long poolId, Map<String, String> details);
-    Map<String, String> getDetails(long poolId);
+public interface PodVlanDao extends GenericDao<PodVlanVO, Long> {
+    public List<PodVlanVO> listAllocatedVnets(long podId);    
+    public void add(long podId, int start, int end);   
+    public void delete(long podId);
+    public PodVlanVO take(long podId, long accountId);
+    public void release(String vlan, long podId, long accountId);
 }
