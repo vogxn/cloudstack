@@ -33,7 +33,6 @@
   <!--
     OSS deployment component configuration
   -->
-
   <bean id="databaseUpgradeChecker" class="com.cloud.upgrade.DatabaseUpgradeChecker" />
   <bean id="configurationDaoImpl" class="com.cloud.configuration.dao.ConfigurationDaoImpl" />
 
@@ -54,27 +53,132 @@
     </property>
   </bean>
 
-  <bean id="managementServerImpl" class ="com.cloud.server.ManagementServerImpl">
-    <property name="UserAuthenticators">
-      <list>
-          <ref bean="MD5UserAuthenticator"/>
-          <ref bean="LDAPUserAuthenticator"/>
-      </list>
-    </property>
-    <property name="HostAllocators">
-      <list>
-          <ref bean="FirstFitRouting"/>
-      </list>
-    </property>
+<!--
+  <bean id="BigSwitchVnsElementService" class="com.cloud.network.element.BigSwitchVnsElement">
+    <property name="name" value="BigSwitchVnsElementService"/>
+  </bean>
+-->
+
+  <!--
+     Adapters
+  -->
+  <bean id="FirstFitRouting" class="com.cloud.agent.manager.allocator.impl.FirstFitRoutingAllocator">
+    <property name="name" value="FirstFitRouting"/>
   </bean>
 
-  <bean id="storageManagerImpl" class="com.cloud.storage.StorageManagerImpl">
-    <property name="StoragePoolAllocators">
-      <list>
-          <ref bean="LocalStoragePoolAllocator"/>
-          <ref bean="FirstFitStoragePoolAllocator"/>
-      </list>
-    </property>
+  <bean id="hypervisorTemplateAdapter" class="com.cloud.template.HypervisorTemplateAdapter">
+    <property name="name" value="HypervisorAdapter"/>
+  </bean>
+
+   <bean id="bareMetalTemplateAdapter" class="com.cloud.baremetal.BareMetalTemplateAdapter">
+    <property name="name" value="BareMetalAdapter"/>
+  </bean>
+
+  <!--
+    Storage pool allocators
+  -->
+
+  <bean id="LocalStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.LocalStoragePoolAllocator">
+    <property name="name" value="LocalStorage"/>
+  </bean>
+  <!--
+  <bean id="FirstFitStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.FirstFitStoragePoolAllocator">
+    <property name="name" value="Storage"/>
+  </bean>
+  -->
+
+  <bean id="UserConcentratedAllocator" class="com.cloud.agent.manager.allocator.impl.UserConcentratedAllocator">
+    <property name="name" value="User First"/>
+  </bean>
+
+  <bean id="ConsoleProxyAllocator" class="com.cloud.consoleproxy.ConsoleProxyBalanceAllocator">
+    <property name="name" value="Balance"/>
+  </bean>
+
+  <bean id="StaticRoleBasedAPIAccessChecker" class="org.apache.cloudstack.acl.StaticRoleBasedAPIAccessChecker"/>
+
+  <bean id="ExteralIpAddressAllocator" class="com.cloud.network.ExteralIpAddressAllocator">
+    <property name="name" value="Basic"/>
+  </bean>
+
+  <bean id="HypervisorTemplateAdapter" class="com.cloud.template.HypervisorTemplateAdapter">
+    <property name="name" value="HypervisorAdapter"/>
+  </bean>
+
+  <bean id="BareMetalTemplateAdapter" class="com.cloud.baremetal.manager.BareMetalTemplateAdapter" >
+    <property name="name" value="BareMetalTemplateAdapter"/>
+  </bean>
+
+  <!--
+    Authenticators
+  -->
+  <bean id="MD5UserAuthenticator" class="com.cloud.server.auth.MD5UserAuthenticator">
+    <property name="name" value="MD5"/>
+  </bean>
+
+  <bean id="LDAPUserAuthenticator" class="com.cloud.server.auth.LDAPUserAuthenticator">
+    <property name="name" value="LDAP"/>
+  </bean>
+
+  <!--
+    Investigators
+  -->
+  <bean id="CheckOnAgentInvestigator" class="com.cloud.ha.CheckOnAgentInvestigator">
+    <property name="name" value="SimpleInvestigator"/>
+  </bean>
+
+  <bean id="XenServerInvestigator" class="com.cloud.ha.XenServerInvestigator">
+    <property name="name" value="XenServerInvestigator"/>
+  </bean>
+
+  <bean id="UserVmDomRInvestigator" class="com.cloud.ha.UserVmDomRInvestigator">
+    <property name="name" value="PingInvestigator"/>
+  </bean>
+
+  <bean id="ManagementIPSystemVMInvestigator" class="com.cloud.ha.ManagementIPSystemVMInvestigator">
+    <property name="name" value="ManagementIPSysVMInvestigator"/>
+  </bean>
+
+  <!--
+    Fencers
+  -->
+  <bean id="XenServerFencer" class="com.cloud.ha.XenServerFencer">
+    <property name="name" value="XenServerFenceBuilder"/>
+  </bean>
+  <bean id="KVMFencer" class="com.cloud.ha.KVMFencer">
+    <property name="name" value="KVMFenceBuilder"/>
+  </bean>
+  <bean id="OvmFencer" class="com.cloud.ovm.hypervisor.OvmFencer">
+    <property name="name" value="OvmFenceBuilder"/>
+  </bean>
+
+  <bean id="XcpServerDiscoverer" class="com.cloud.hypervisor.xen.discoverer.XcpServerDiscoverer">
+    <property name="name" value="XCP Agent"/>
+  </bean>
+
+  <bean id="SecondaryStorageDiscoverer" class="com.cloud.storage.secondary.SecondaryStorageDiscoverer">
+    <property name="name" value="SecondaryStorage"/>
+  </bean>
+
+  <bean id="KvmServerDiscoverer" class="com.cloud.hypervisor.kvm.discoverer.KvmServerDiscoverer">
+    <property name="name" value="KVM Agent"/>
+  </bean>
+
+  <bean id="SimulatorDiscoverer" class="com.cloud.resource.SimulatorDiscoverer">
+    <property name="name" value="Simulator Agent"/>
+  </bean>
+
+
+  <bean id="BareMetalDiscoverer" class="com.cloud.baremetal.manager.BareMetalDiscoverer">
+    <property name="name" value="Bare Metal Agent"/>
+  </bean>
+
+  <bean id="HypervServerDiscoverer" class="com.cloud.hypervisor.hyperv.HypervServerDiscoverer">
+    <property name="name" value="SCVMMServer"/>
+  </bean>
+
+  <bean id="OvmDiscoverer" class="com.cloud.ovm.hypervisor.OvmDiscoverer">
+    <property name="name" value="Ovm Discover"/>
   </bean>
 
   <bean id="FirstFitPlanner" class="com.cloud.deploy.FirstFitPlanner">
@@ -82,7 +186,9 @@
     <property name="StoragePoolAllocators">
       <list>
           <ref bean="LocalStoragePoolAllocator"/>
-          <ref bean="FirstFitStoragePoolAllocator"/>
+          <ref bean="clusterScopeStoragePoolAllocator"/>
+          <ref bean="zoneWideStoragePoolAllocator"/>
+          <ref bean="garbageCollectingStoragePoolAllocator"/>
       </list>
     </property>
     <property name="HostAllocators">
@@ -103,7 +209,11 @@
           <ref bean="XcpServerDiscoverer"/>
           <ref bean="SecondaryStorageDiscoverer"/>
           <ref bean="KvmServerDiscoverer"/>
+
+  <!--
           <ref bean="BareMetalDiscoverer"/>
+  -->
+
           <ref bean="OvmDiscoverer"/>
        </list>
     </property>
@@ -138,7 +248,11 @@
           <ref bean="FirstFitPlanner" />
           <ref bean="UserDispersingPlanner" />
           <ref bean="UserConcentratedPodPlanner" />
+
+<!--
           <ref bean="BareMetalPlanner" />
+-->
+
       </list>
     </property>
   </bean>
@@ -163,9 +277,11 @@
           <ref bean="Ovs"/>
           <ref bean="SecurityGroupProvider"/>
           <ref bean="VpcVirtualRouter"/>
+<!--
           <ref bean="BareMetalDhcp"/>
           <ref bean="BareMetalPxe"/>
           <ref bean="BareMetalUserdata"/>
+-->
       </list>
     </property>
     <property name="IpDeployers">
@@ -179,7 +295,9 @@
       <list>
           <ref bean="VirtualRouter"/>
           <ref bean="VpcVirtualRouter"/>
+<!--
           <ref bean="BareMetalDhcp"/>
+-->
       </list>
     </property>
   </bean>
@@ -191,13 +309,17 @@
           <ref bean="Ovs"/>
           <ref bean="SecurityGroupProvider"/>
           <ref bean="VpcVirtualRouter"/>
+<!--
           <ref bean="BareMetalDhcp"/>
           <ref bean="BareMetalPxe"/>
           <ref bean="BareMetalUserdata"/>
+-->
       </list>
     </property>
   </bean>
 
-  <bean id="GlobalLoadBalancingRulesServiceImpl" class ="org.apache.cloudstack.region.gslb.GlobalLoadBalancingRulesServiceImpl" />
+  <bean id="SimulatorGuru" class="com.cloud.simulator.SimulatorGuru">
+    <property name="name" value="SimulatorGuru"/>
+  </bean>
 
 </beans>
