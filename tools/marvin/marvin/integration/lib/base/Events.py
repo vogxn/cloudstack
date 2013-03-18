@@ -16,12 +16,13 @@
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
 from marvin.cloudstackAPI import listEvents
+from marvin.cloudstackAPI import deleteEvents
 
-class Events(CloudStackEntity):
+class Events(CloudStackEntity.CloudStackEntity):
 
 
-    def __init__(self, items):
-        self.__dict__.update(items)
+    def __init__(self, **kwargs):
+        self.__dict__.update(**kwargs)
 
 
     @classmethod
@@ -31,3 +32,8 @@ class Events(CloudStackEntity):
         events = apiclient.listEvents(cmd)
         return map(lambda e: Events(e.__dict__), events)
 
+
+    def delete(self, apiclient, **kwargs):
+        cmd = deleteEvents.deleteEventsCmd()
+        [setattr(cmd, key, value) for key,value in kwargs.items]
+        events = apiclient.deleteEvents(cmd)
