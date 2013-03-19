@@ -230,26 +230,18 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     UserVO _systemUser;
     AccountVO _systemAccount;
 
+    @Inject
     List<SecurityChecker> _securityCheckers;
-    
-	int _cleanupInterval;
+    int _cleanupInterval;
 
     public List<UserAuthenticator> getUserAuthenticators() {
-    	return _userAuthenticators;
+	return _userAuthenticators;
     }
-    
-    public void setUserAuthenticators(List<UserAuthenticator> authenticators) {
-    	_userAuthenticators = authenticators;
-    }
-    
-    public List<SecurityChecker> getSecurityCheckers() {
-		return _securityCheckers;
-	}
 
-	public void setSecurityCheckers(List<SecurityChecker> securityCheckers) {
-		this._securityCheckers = securityCheckers;
-	}
-    
+    public void setUserAuthenticators(List<UserAuthenticator> authenticators) {
+	_userAuthenticators = authenticators;
+    }
+
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         _systemAccount = _accountDao.findById(AccountVO.ACCOUNT_ID_SYSTEM);
@@ -1180,7 +1172,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_ACCOUNT_ENABLE, eventDescription = "enabling account", async = true)
     public AccountVO enableAccount(String accountName, Long domainId, Long accountId) {
 
         // Check if account exists
@@ -1271,7 +1262,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_ACCOUNT_UPDATE, eventDescription = "updating account", async = true)
     public AccountVO updateAccount(UpdateAccountCmd cmd) {
         Long accountId = cmd.getId();
         Long domainId = cmd.getDomainId();
