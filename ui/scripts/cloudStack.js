@@ -253,7 +253,7 @@
 
 				g_regionUrlParam = '?loginUrl=' + escape("command=login" + array1.join("") + "&response=json");
 				$.cookie('loginUrl', escape("command=login" + array1.join("") + "&response=json"), { expires: 1});
-				
+
         $.ajax({
           type: "POST",
           data: "command=login" + array1.join("") + "&response=json",					
@@ -385,9 +385,9 @@
 						g_domainid = null;	
 						g_timezoneoffset = null;
 						g_timezone = null;
-						g_supportELB = null;						
+						g_supportELB = null;
 						g_regionUrlParam = null;
-						
+
 						$.cookie('JSESSIONID', null);
 						$.cookie('sessionKey', null);
 						$.cookie('username', null);
@@ -456,21 +456,10 @@
             context: cloudStack.context
           });
         });
-
-        window._reloadUI = function() {
-          $('#container').html('');
-          $('#container').cloudStack(window.cloudStack);
-        };
       }
     };
 		
     document.title = 'CloudStack';
-
-    if ($.cookie('loginUrl') != null || $.urlParam('loginUrl') != 0) {
-      // SSO
-      loginArgs.hideLoginScreen = true;
-    }
-    
     cloudStack.uiCustom.login(loginArgs);
 
     // Localization
