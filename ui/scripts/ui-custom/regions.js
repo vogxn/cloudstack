@@ -29,6 +29,7 @@
             var data = args.data;
             var activeRegionID = args.activeRegionID;
 
+						var currentRegion;
             $(data).each(function() {
               var region = this;
               var regionName = region.name;
@@ -36,16 +37,20 @@
 
               $li.data('region-data', region);
 
+							if(document.location.href == region.endpoint) {
+                currentRegion = region;
+								$li.addClass('active');
+							}
+							/*
               if (region.id == activeRegionID) {
                 $li.addClass('active');
               }
-              
-              $regionSwitcherButton.find('.title')
-                .html(regionName)
-                .attr('title', regionName);
-              
+              */
+
               $regionList.append($li);
             });
+
+						$regionSwitcherButton.find('.title').html(_s(currentRegion.name)).attr('title', _s(currentRegion.name));
           }
         }
       });
