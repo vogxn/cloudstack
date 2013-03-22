@@ -36,7 +36,7 @@
      Non-OSS deployment component configuration
   -->
   <bean id="premiumDatabaseUpgradeChecker" class="com.cloud.upgrade.PremiumDatabaseUpgradeChecker"/>
-  
+
   <!--
     DAO with customized configuration under non-OSS deployment
   -->
@@ -45,12 +45,12 @@
       <map>
         <entry key="premium" value="true" />
       </map>
-    </property>  
+    </property>
   </bean>
 
   <!--
     VMware support components
-  -->  
+  -->
   <bean id="VmwareFencer" class="com.cloud.ha.VmwareFencer">
     <property name="name" value="VMwareFenceBuilder"/>
   </bean>
@@ -84,7 +84,7 @@
 
   <!--
     Netapp support components
-  -->  
+  -->
   <bean id="lunDaoImpl" class="com.cloud.netapp.dao.LunDaoImpl" />
   <bean id="poolDaoImpl" class="com.cloud.netapp.dao.PoolDaoImpl" />
   <bean id="netappVolumeDaoImpl" class="com.cloud.netapp.dao.VolumeDaoImpl" />
@@ -96,7 +96,7 @@
   <bean id="JuniperSRX" class="com.cloud.network.element.JuniperSRXExternalFirewallElement">
     <property name="name" value="JuniperSRX"/>
   </bean>
-  
+
   <!--
     NetScalar support components
   -->
@@ -104,17 +104,17 @@
   <bean id="Netscaler" class="com.cloud.network.element.NetscalerElement">
     <property name="name" value="Netscaler"/>
   </bean>
-  
+
   <!--
     F5BigIP support components
   -->
   <bean id="F5BigIP" class="com.cloud.network.element.F5ExternalLoadBalancerElement">
     <property name="name" value="F5BigIP"/>
   </bean>
-  
+
   <!--
     Cisco Nexus support components
-  -->  
+  -->
   <bean id="ciscoNexusVSMDeviceDaoImpl" class="com.cloud.network.dao.CiscoNexusVSMDeviceDaoImpl" />
   <bean id="CiscoNexus1000vVSM" class="com.cloud.network.element.CiscoNexusVSMElement">
     <property name="name" value="CiscoNexus1000vVSM"/>
@@ -122,13 +122,13 @@
   
   <!--
     BigSwitch support components
-  -->  
+  -->
   <bean id="bigSwitchVnsDaoImpl" class="com.cloud.network.dao.BigSwitchVnsDaoImpl" />
   <bean id="bigSwitchVnsElement" class="com.cloud.network.element.BigSwitchVnsElement">
     <property name="name" value="BigSwitchVnsElement"/>
   </bean>
 
-  <!-- 
+  <!--
     Managers & pluggable adapters configuration under non-OSS deployment
   -->
   <bean id="accountManagerImpl" class="com.cloud.user.AccountManagerImpl" >
@@ -144,7 +144,7 @@
       </list>
     </property>
   </bean>
-  
+
   <bean id="managementServerImpl" class ="com.cloud.server.ManagementServerImpl">
     <property name="UserAuthenticators">
       <list>
@@ -163,22 +163,17 @@
     <property name="StoragePoolAllocators">
       <list>
           <ref bean="LocalStoragePoolAllocator"/>
-          <ref bean="clusterScopeStoragePoolAllocator"/>
-          <ref bean="zoneWideStoragePoolAllocator"/>
-          <ref bean="garbageCollectingStoragePoolAllocator"/>
+          <ref bean="FirstFitStoragePoolAllocator"/>
       </list>
     </property>
   </bean>
 
   <bean id="FirstFitPlanner" class="com.cloud.deploy.FirstFitPlanner">
     <property name="name" value="First Fit"/>
-
     <property name="StoragePoolAllocators">
       <list>
           <ref bean="LocalStoragePoolAllocator"/>
-          <ref bean="clusterScopeStoragePoolAllocator"/>
-          <ref bean="zoneWideStoragePoolAllocator"/>
-          <ref bean="garbageCollectingStoragePoolAllocator"/>
+          <ref bean="FirstFitStoragePoolAllocator"/>
       </list>
     </property>
     <property name="HostAllocators">
@@ -199,9 +194,7 @@
           <ref bean="XcpServerDiscoverer"/>
           <ref bean="SecondaryStorageDiscoverer"/>
           <ref bean="KvmServerDiscoverer"/>
-<!--          
           <ref bean="BareMetalDiscoverer"/>
--->
           <ref bean="OvmDiscoverer"/>
           <ref bean="vmwareServerDiscoverer"/>
        </list>
@@ -239,13 +232,11 @@
           <ref bean="FirstFitPlanner" />
           <ref bean="UserDispersingPlanner" />
           <ref bean="UserConcentratedPodPlanner" />
-<!--
           <ref bean="BareMetalPlanner" />
--->
       </list>
     </property>
   </bean>
-  
+
   <bean id="networkManagerImpl" class="com.cloud.network.NetworkManagerImpl" >
     <property name="NetworkGurus">
       <list>
@@ -271,11 +262,9 @@
           <ref bean="Ovs"/>
           <ref bean="SecurityGroupProvider"/>
           <ref bean="VpcVirtualRouter"/>
-<!--
           <ref bean="BareMetalDhcp"/>
           <ref bean="BareMetalPxe"/>
           <ref bean="BareMetalUserdata"/>
--->    
       </list>
     </property>
     <property name="IpDeployers">
@@ -289,9 +278,7 @@
       <list>
           <ref bean="VirtualRouter"/>
           <ref bean="VpcVirtualRouter"/>
-<!--
           <ref bean="BareMetalDhcp"/>
--->
       </list>
     </property>
   </bean>
@@ -308,11 +295,9 @@
           <ref bean="Ovs"/>
           <ref bean="SecurityGroupProvider"/>
           <ref bean="VpcVirtualRouter"/>
-<!--
           <ref bean="BareMetalDhcp"/>
           <ref bean="BareMetalPxe"/>
           <ref bean="BareMetalUserdata"/>
--->    
       </list>
     </property>
   </bean>

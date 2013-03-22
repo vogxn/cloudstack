@@ -35,18 +35,26 @@
   <!--
     @DB support
   -->
-  <bean id="componentContext" class="com.cloud.utils.component.ComponentContext" />
+  <aop:config>
+    <aop:aspect id="dbContextBuilder" ref="transactionContextBuilder">
+        <aop:pointcut id="captureAnyMethod"
+            expression="execution(* *(..))" 
+        />
+        
+        <aop:around pointcut-ref="captureAnyMethod" method="AroundAnyMethod"/> 
+    </aop:aspect>
+
+    <aop:aspect id="actionEventInterceptorAspect" ref="actionEventInterceptor">
+        <aop:pointcut id="captureEventMethod"
+            expression="execution(* *(..)) and @annotation(com.cloud.event.ActionEvent)" 
+        />
+
+        <aop:around pointcut-ref="captureEventMethod" method="AroundAnyMethod"/> 
+    </aop:aspect>
+  </aop:config>
+
   <bean id="transactionContextBuilder" class="com.cloud.utils.db.TransactionContextBuilder" />
   <bean id="actionEventInterceptor" class="com.cloud.event.ActionEventInterceptor" />
-
-  <bean id="instantiatePostProcessor" class="com.cloud.utils.component.ComponentInstantiationPostProcessor">
-    <property name="Interceptors">
-        <list>
-            <ref bean="transactionContextBuilder" />
-            <ref bean="actionEventInterceptor" />
-        </list>
-    </property>
-  </bean>
 
   <!--
     RPC/Async/EventBus
@@ -152,7 +160,7 @@
       </map>
     </property>  
   </bean>
-  
+
   <!--
     DAOs with default configuration
   -->
@@ -175,7 +183,6 @@
   <bean id="certificateDaoImpl" class="com.cloud.certificate.dao.CertificateDaoImpl" />
   <bean id="clusterDaoImpl" class="com.cloud.dc.dao.ClusterDaoImpl" />
   <bean id="clusterDetailsDaoImpl" class="com.cloud.dc.ClusterDetailsDaoImpl" />
-  <bean id="clusterVSMMapDaoImpl" class="com.cloud.dc.dao.ClusterVSMMapDaoImpl" />
   <bean id="commandExecLogDaoImpl" class="com.cloud.secstorage.CommandExecLogDaoImpl" />
   <bean id="conditionDaoImpl" class="com.cloud.network.as.dao.ConditionDaoImpl" />
   <bean id="consoleProxyDaoImpl" class="com.cloud.vm.dao.ConsoleProxyDaoImpl" />
@@ -203,14 +210,12 @@
   <bean id="externalPublicIpStatisticsDaoImpl" class="com.cloud.usage.dao.ExternalPublicIpStatisticsDaoImpl" />
   <bean id="firewallRulesCidrsDaoImpl" class="com.cloud.network.dao.FirewallRulesCidrsDaoImpl" />
   <bean id="firewallRulesDaoImpl" class="com.cloud.network.dao.FirewallRulesDaoImpl" />
-  <bean id="globalLoadBalancerDaoImpl" class="org.apache.cloudstack.region.gslb.GlobalLoadBalancerDaoImpl" />
-  <bean id="globalLoadBalancerLbRuleMapDaoImpl" class="org.apache.cloudstack.region.gslb.GlobalLoadBalancerLbRuleMapDaoImpl" />
   <bean id="guestOSCategoryDaoImpl" class="com.cloud.storage.dao.GuestOSCategoryDaoImpl" />
   <bean id="guestOSDaoImpl" class="com.cloud.storage.dao.GuestOSDaoImpl" />
   <bean id="highAvailabilityDaoImpl" class="com.cloud.ha.dao.HighAvailabilityDaoImpl" />
   <bean id="hostDaoImpl" class="com.cloud.host.dao.HostDaoImpl" />
-  <bean id="engineHostDetailsDaoImpl" class="org.apache.cloudstack.engine.datacenter.entity.api.db.dao.HostDetailsDaoImpl" />
   <bean id="hostDetailsDaoImpl" class="com.cloud.host.dao.HostDetailsDaoImpl" />
+  <bean id="engineHostDetailsDaoImpl" class="org.apache.cloudstack.engine.datacenter.entity.api.db.dao.HostDetailsDaoImpl" />
   <bean id="hostJoinDaoImpl" class="com.cloud.api.query.dao.HostJoinDaoImpl" />
   <bean id="engineHostTagsDaoImpl" class="org.apache.cloudstack.engine.datacenter.entity.api.db.dao.HostTagsDaoImpl" />
   <bean id="hostTagsDaoImpl" class="com.cloud.host.dao.HostTagsDaoImpl" />
@@ -218,6 +223,7 @@
   <bean id="iPAddressDaoImpl" class="com.cloud.network.dao.IPAddressDaoImpl" />
   <bean id="identityDaoImpl" class="com.cloud.uuididentity.dao.IdentityDaoImpl" />
   <bean id="imageDaoStoreDaoImpl" class="org.apache.cloudstack.storage.image.db.ImageDaoStoreDaoImpl" />
+  <bean id="imageDataDaoImpl" class="org.apache.cloudstack.storage.image.db.ImageDataDaoImpl" />
   <bean id="imageDataStoreProviderDaoImpl" class="org.apache.cloudstack.storage.image.db.ImageDataStoreProviderDaoImpl" />
   <bean id="inlineLoadBalancerNicMapDaoImpl" class="com.cloud.network.dao.InlineLoadBalancerNicMapDaoImpl" />
   <bean id="instanceGroupDaoImpl" class="com.cloud.vm.dao.InstanceGroupDaoImpl" />
@@ -225,20 +231,12 @@
   <bean id="instanceGroupVMMapDaoImpl" class="com.cloud.vm.dao.InstanceGroupVMMapDaoImpl" />
   <bean id="itWorkDaoImpl" class="com.cloud.vm.ItWorkDaoImpl" />
   <bean id="keystoreDaoImpl" class="com.cloud.keystore.KeystoreDaoImpl" />
-  <bean id="lBHealthCheckPolicyDaoImpl" class="com.cloud.network.dao.LBHealthCheckPolicyDaoImpl" />
   <bean id="lBStickinessPolicyDaoImpl" class="com.cloud.network.dao.LBStickinessPolicyDaoImpl" />
   <bean id="launchPermissionDaoImpl" class="com.cloud.storage.dao.LaunchPermissionDaoImpl" />
   <bean id="loadBalancerDaoImpl" class="com.cloud.network.dao.LoadBalancerDaoImpl" />
   <bean id="loadBalancerVMMapDaoImpl" class="com.cloud.network.dao.LoadBalancerVMMapDaoImpl" />
   <bean id="managementServerHostDaoImpl" class="com.cloud.cluster.dao.ManagementServerHostDaoImpl" />
   <bean id="managementServerHostPeerDaoImpl" class="com.cloud.cluster.dao.ManagementServerHostPeerDaoImpl" />
-  <bean id="mockConfigurationDaoImpl" class="com.cloud.simulator.dao.MockConfigurationDaoImpl" />
-  <bean id="mockHostDaoImpl" class="com.cloud.simulator.dao.MockHostDaoImpl" />
-  <bean id="mockSecStorageDaoImpl" class="com.cloud.simulator.dao.MockSecStorageDaoImpl" />
-  <bean id="mockSecurityRulesDaoImpl" class="com.cloud.simulator.dao.MockSecurityRulesDaoImpl" />
-  <bean id="mockStoragePoolDaoImpl" class="com.cloud.simulator.dao.MockStoragePoolDaoImpl" />
-  <bean id="mockVMDaoImpl" class="com.cloud.simulator.dao.MockVMDaoImpl" />
-  <bean id="mockVolumeDaoImpl" class="com.cloud.simulator.dao.MockVolumeDaoImpl" />
   <bean id="networkAccountDaoImpl" class="com.cloud.network.dao.NetworkAccountDaoImpl" />
   <bean id="networkDaoImpl" class="com.cloud.network.dao.NetworkDaoImpl" />
   <bean id="networkDomainDaoImpl" class="com.cloud.network.dao.NetworkDomainDaoImpl" />
@@ -250,7 +248,6 @@
   <bean id="networkRuleConfigDaoImpl" class="com.cloud.network.dao.NetworkRuleConfigDaoImpl" />
   <bean id="networkServiceMapDaoImpl" class="com.cloud.network.dao.NetworkServiceMapDaoImpl" />
   <bean id="nicDaoImpl" class="com.cloud.vm.dao.NicDaoImpl" />
-  <bean id="nicSecondaryIpDaoImpl" class="com.cloud.vm.dao.NicSecondaryIpDaoImpl" />
   <bean id="objectInDataStoreDaoImpl" class="org.apache.cloudstack.storage.db.ObjectInDataStoreDaoImpl" />
   <bean id="ovsTunnelInterfaceDaoImpl" class="com.cloud.network.ovs.dao.OvsTunnelInterfaceDaoImpl" />
   <bean id="ovsTunnelNetworkDaoImpl" class="com.cloud.network.ovs.dao.OvsTunnelNetworkDaoImpl" />
@@ -262,7 +259,6 @@
   <bean id="podVlanDaoImpl" class="com.cloud.dc.dao.PodVlanDaoImpl" />
   <bean id="podVlanMapDaoImpl" class="com.cloud.dc.dao.PodVlanMapDaoImpl" />
   <bean id="portForwardingRulesDaoImpl" class="com.cloud.network.rules.dao.PortForwardingRulesDaoImpl" />
-  <bean id="portProfileDaoImpl" class="com.cloud.network.dao.PortProfileDaoImpl" />
   <bean id="primaryDataStoreDaoImpl" class="org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDaoImpl" />
   <bean id="primaryDataStoreDetailsDaoImpl" class="org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDetailsDaoImpl" />
   <bean id="privateIpDaoImpl" class="com.cloud.network.vpc.dao.PrivateIpDaoImpl" />
@@ -300,6 +296,7 @@
   <bean id="staticRouteDaoImpl" class="com.cloud.network.vpc.dao.StaticRouteDaoImpl" />
   <bean id="storageNetworkIpAddressDaoImpl" class="com.cloud.dc.dao.StorageNetworkIpAddressDaoImpl" />
   <bean id="storageNetworkIpRangeDaoImpl" class="com.cloud.dc.dao.StorageNetworkIpRangeDaoImpl" />
+  <bean id="storagePoolDaoImpl" class="com.cloud.storage.dao.StoragePoolDaoImpl" />
   <bean id="storagePoolDetailsDaoImpl" class="com.cloud.storage.dao.StoragePoolDetailsDaoImpl" />
   <bean id="storagePoolHostDaoImpl" class="com.cloud.storage.dao.StoragePoolHostDaoImpl" />
   <bean id="storagePoolJoinDaoImpl" class="com.cloud.api.query.dao.StoragePoolJoinDaoImpl" />
@@ -327,8 +324,6 @@
   <bean id="userIpv6AddressDaoImpl" class="com.cloud.network.dao.UserIpv6AddressDaoImpl" />
   <bean id="userStatisticsDaoImpl" class="com.cloud.user.dao.UserStatisticsDaoImpl" />
   <bean id="userStatsLogDaoImpl" class="com.cloud.user.dao.UserStatsLogDaoImpl" />
-  <bean id="userVmCloneSettingDaoImpl" class="com.cloud.vm.dao.UserVmCloneSettingDaoImpl" />
-  <bean id="userVmDaoImpl" class="com.cloud.vm.dao.UserVmDaoImpl" />
   <bean id="userVmDetailsDaoImpl" class="com.cloud.vm.dao.UserVmDetailsDaoImpl" />
   <bean id="userVmJoinDaoImpl" class="com.cloud.api.query.dao.UserVmJoinDaoImpl" />
   <bean id="vMComputeTagDaoImpl" class="org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMComputeTagDaoImpl" />
@@ -337,7 +332,6 @@
   <bean id="vMNetworkMapDaoImpl" class="org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMNetworkMapDaoImpl" />
   <bean id="vMReservationDaoImpl" class="org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMReservationDaoImpl" />
   <bean id="vMRootDiskTagDaoImpl" class="org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMRootDiskTagDaoImpl" />
-  <bean id="vMSnapshotDaoImpl" class="com.cloud.vm.snapshot.dao.VMSnapshotDaoImpl" />
   <bean id="vMTemplateDetailsDaoImpl" class="com.cloud.storage.dao.VMTemplateDetailsDaoImpl" />
   <bean id="vMTemplateHostDaoImpl" class="com.cloud.storage.dao.VMTemplateHostDaoImpl" />
   <bean id="vMTemplatePoolDaoImpl" class="com.cloud.storage.dao.VMTemplatePoolDaoImpl" />
@@ -356,8 +350,10 @@
   <bean id="vpcGatewayDaoImpl" class="com.cloud.network.vpc.dao.VpcGatewayDaoImpl" />
   <bean id="vpcOfferingDaoImpl" class="com.cloud.network.vpc.dao.VpcOfferingDaoImpl" />
   <bean id="vpcOfferingServiceMapDaoImpl" class="com.cloud.network.vpc.dao.VpcOfferingServiceMapDaoImpl" />
-  <bean id="vpcServiceMapDaoImpl" class="com.cloud.network.vpc.dao.VpcServiceMapDaoImpl" />
   <bean id="vpnUserDaoImpl" class="com.cloud.network.dao.VpnUserDaoImpl" />
+  <bean id="userVmDaoImpl" class="com.cloud.vm.dao.UserVmDaoImpl" />
+  <bean id="portProfileDaoImpl" class="com.cloud.network.dao.PortProfileDaoImpl" />
+  <bean id="clusterVSMMapDaoImpl" class="com.cloud.dc.dao.ClusterVSMMapDaoImpl" />
 
   <!--
     Checkers
@@ -366,10 +362,10 @@
   <bean id="StaticRoleBasedAPIAccessChecker" class="org.apache.cloudstack.acl.StaticRoleBasedAPIAccessChecker"/>
   <bean id="databaseIntegrityChecker" class="com.cloud.upgrade.DatabaseIntegrityChecker" />
   <bean id="domainChecker" class="com.cloud.acl.DomainChecker" />
-  
+
   <!--
     Authenticators
-  --> 
+  -->
   <bean id="basicAgentAuthManager" class="com.cloud.agent.manager.authn.impl.BasicAgentAuthManager">
     <property name="name" value="BASIC"/>
   </bean>
@@ -386,6 +382,15 @@
   <bean id="Ovs" class="com.cloud.network.element.OvsElement">
     <property name="name" value="Ovs"/>
   </bean>
+  <bean id="BareMetalDhcp" class="com.cloud.baremetal.networkservice.BaremetalDhcpElement">
+    <property name="name" value="BareMetalDhcp"/>
+  </bean>
+  <bean id="BareMetalPxe" class="com.cloud.baremetal.networkservice.BaremetalPxeElement">
+    <property name="name" value="BareMetalPxe"/>
+  </bean>
+  <bean id="BareMetalUserdata" class="com.cloud.baremetal.networkservice.BaremetalUserdataElement">
+      <property name="name" value="BareMetalUserdata"/>
+  </bean>
   <bean id="SecurityGroupProvider" class="com.cloud.network.element.SecurityGroupElement">
     <property name="name" value="SecurityGroupProvider"/>
   </bean>
@@ -400,9 +405,9 @@
     <property name="name" value="ElasticLoadBalancerElement"/>
   </bean>
 
-  <!-- 
+  <!--
     General allocators
-  -->             
+  -->
   <bean id="firstFitAllocator" class="com.cloud.agent.manager.allocator.impl.FirstFitAllocator" />
   <bean id="randomAllocator" class="com.cloud.agent.manager.allocator.impl.RandomAllocator" />
 
@@ -412,28 +417,32 @@
   <bean id="FirstFitRouting" class="com.cloud.agent.manager.allocator.impl.FirstFitRoutingAllocator">
     <property name="name" value="FirstFitRouting"/>
   </bean>
-  
+
   <!--
     Storage pool allocators
   -->
-  <bean id="LocalStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.LocalStoragePoolAllocator">
+  <bean id="LocalStoragePoolAllocator" class="com.cloud.storage.allocator.LocalStoragePoolAllocator">
     <property name="name" value="LocalStorage"/>
   </bean>
-  <bean id="clusterScopeStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.ClusterScopeStoragePoolAllocator" />
-  <bean id="zoneWideStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.ZoneWideStoragePoolAllocator" />
-  <bean id="garbageCollectingStoragePoolAllocator" class="org.apache.cloudstack.storage.allocator.GarbageCollectingStoragePoolAllocator">
-    <property name="name" value="GCStorage"/>
+  <bean id="FirstFitStoragePoolAllocator" class="com.cloud.storage.allocator.FirstFitStoragePoolAllocator">
+    <property name="name" value="Storage"/>
   </bean>
 
   <bean id="UserConcentratedAllocator" class="com.cloud.agent.manager.allocator.impl.UserConcentratedAllocator">
     <property name="name" value="UserFirst"/>
   </bean>
-  
-  
+
+  <bean id="useLocalForRootAllocator" class="com.cloud.storage.allocator.UseLocalForRootAllocator">
+    <property name="name" value="LocalForRoot"/>
+  </bean>
+
+  <bean id="garbageCollectingStoragePoolAllocator" class="com.cloud.storage.allocator.GarbageCollectingStoragePoolAllocator">
+    <property name="name" value="GCStorage"/>
+  </bean>
+  <bean id="randomStoragePoolAllocator" class="com.cloud.storage.allocator.RandomStoragePoolAllocator" />
   <bean id="recreatableFencer" class="com.cloud.ha.RecreatableFencer" />
   <bean id="recreateHostAllocator" class="com.cloud.agent.manager.allocator.impl.RecreateHostAllocator" />
   <bean id="secondaryStorageVmDefaultAllocator" class="com.cloud.storage.secondary.SecondaryStorageVmDefaultAllocator" />
-
 
   <!--
     Misc allocator & Adapters
@@ -446,7 +455,8 @@
     <property name="name" value="Basic"/>
   </bean>
 
-  <bean id="hyervisorTemplateAdapter" class="com.cloud.template.HypervisorTemplateAdapter" />
+  <bean id="BareMetalTemplateAdapter" class="com.cloud.baremetal.manager.BareMetalTemplateAdapter" />
+  <bean id="hyervisorTemplateAdapter" class="com.cloud.template.HyervisorTemplateAdapter" />
   <bean id="clusterAlertAdapter" class="com.cloud.alert.ClusterAlertAdapter" />
   <bean id="consoleProxyAlertAdapter" class="com.cloud.alert.ConsoleProxyAlertAdapter" />
   <bean id="secondaryStorageVmAlertAdapter" class="com.cloud.alert.SecondaryStorageVmAlertAdapter" />
@@ -462,7 +472,7 @@
   <bean id="XenServerInvestigator" class="com.cloud.ha.XenServerInvestigator">
     <property name="name" value="XenServerInvestigator"/>
   </bean>
-  
+
   <bean id="UserVmDomRInvestigator" class="com.cloud.ha.UserVmDomRInvestigator">
     <property name="name" value="PingInvestigator"/>
   </bean>
@@ -499,6 +509,10 @@
     <property name="name" value="KVM Agent"/>
   </bean>
 
+  <bean id="BareMetalDiscoverer" class="com.cloud.baremetal.manager.BareMetalDiscoverer">
+    <property name="name" value="Bare Metal Agent"/>
+  </bean>
+
   <bean id="HypervServerDiscoverer" class="com.cloud.hypervisor.hyperv.HypervServerDiscoverer">
     <property name="name" value="SCVMMServer"/>
   </bean>
@@ -506,7 +520,7 @@
   <bean id="OvmDiscoverer" class="com.cloud.ovm.hypervisor.OvmDiscoverer">
     <property name="name" value="Ovm Discover"/>
   </bean>
-  
+
   <bean id="dummyHostDiscoverer" class="com.cloud.resource.DummyHostDiscoverer">
     <property name="name" value="dummyHostDiscoverer" />
   </bean>
@@ -517,9 +531,13 @@
   <bean id="UserDispersingPlanner" class="com.cloud.deploy.UserDispersingPlanner">
     <property name="name" value="UserDispersing"/>
   </bean>
-  
+
   <bean id="UserConcentratedPodPlanner" class="com.cloud.deploy.UserConcentratedPodPlanner">
     <property name="name" value="UserConcentratedPod"/>
+  </bean>
+
+  <bean id="BareMetalPlanner" class="com.cloud.baremetal.manager.BareMetalPlanner">
+    <property name="name" value="BareMetal Fit"/>
   </bean>
 
   <bean id="clusterBasedAgentLoadBalancerPlanner" class="com.cloud.cluster.agentlb.ClusterBasedAgentLoadBalancerPlanner">
@@ -563,7 +581,7 @@
   <bean id="XenServerGuru" class="com.cloud.hypervisor.XenServerGuru">
     <property name="name" value="XenServerGuru"/>
   </bean>
-  
+
   <bean id="KVMGuru" class="com.cloud.hypervisor.KVMGuru">
     <property name="name" value="KVMGuru"/>
   </bean>
@@ -571,16 +589,24 @@
   <bean id="OvmGuru" class="com.cloud.ovm.hypervisor.OvmGuru">
     <property name="name" value="OvmGuru"/>
   </bean>
-  
+
+  <bean id="BaremetalGuru" class="com.cloud.baremetal.manager.BareMetalGuru">
+    <property name="name" value="BaremetalGuru"/>
+  </bean>
+
+  <bean id="BaremetalPlannerSelector" class="com.cloud.baremetal.manager.BaremetalPlannerSelector">
+    <property name="name" value="BaremetalPlannerSelector"/>
+  </bean>
+
   <bean id="HypervisorPlannerSelector" class="com.cloud.deploy.HypervisorVmPlannerSelector">
     <property name="name" value="HypervisorPlannerSelector"/>
   </bean>
 
   <!--
     Managers
-  --> 
+  -->
   <bean id="configurationServerImpl" class="com.cloud.server.ConfigurationServerImpl" />
-   
+
   <bean id="clusterManagerImpl" class="com.cloud.cluster.ClusterManagerImpl" />
   <bean id="clusteredAgentManagerImpl" class="com.cloud.agent.manager.ClusteredAgentManagerImpl" />
 
@@ -593,6 +619,12 @@
 
   <bean id="apiRateLimitServiceImpl" class="org.apache.cloudstack.ratelimit.ApiRateLimitServiceImpl"/>
 
+  <bean id="BaremetalManager" class="com.cloud.baremetal.manager.BaremetalManagerImpl"/>
+  <bean id="BaremetalDhcpManager" class="com.cloud.baremetal.networkservice.BaremetalDhcpManagerImpl"/>
+  <bean id="BaremetalKickStartPxeService" class="com.cloud.baremetal.networkservice.BaremetalKickStartServiceImpl"/>
+  <bean id="BaremetalPingPxeService" class="com.cloud.baremetal.networkservice.BareMetalPingServiceImpl" />
+  <bean id="BaremetalPxeManager" class="com.cloud.baremetal.networkservice.BaremetalPxeManagerImpl" />
+
   <bean id="alertManagerImpl" class="com.cloud.alert.AlertManagerImpl" />
   <bean id="asyncJobExecutorContextImpl" class="com.cloud.async.AsyncJobExecutorContextImpl" />
   <bean id="asyncJobManagerImpl" class="com.cloud.async.AsyncJobManagerImpl" />
@@ -601,6 +633,8 @@
   <bean id="clusterFenceManagerImpl" class="com.cloud.cluster.ClusterFenceManagerImpl" />
   <bean id="configurationManagerImpl" class="com.cloud.configuration.ConfigurationManagerImpl" />
   <bean id="dataStoreProviderManagerImpl" class="org.apache.cloudstack.storage.datastore.provider.DataStoreProviderManagerImpl" />
+  <bean id="domainManagerImpl" class="com.cloud.user.DomainManagerImpl" />
+  <bean id="downloadMonitorImpl" class="com.cloud.storage.download.DownloadMonitorImpl" />
   <bean id="elasticLoadBalancerManagerImpl" class="com.cloud.network.lb.ElasticLoadBalancerManagerImpl" />
   <bean id="entityManagerImpl" class="com.cloud.dao.EntityManagerImpl" />
   <bean id="externalLoadBalancerUsageManagerImpl" class="com.cloud.network.ExternalLoadBalancerUsageManagerImpl" />
@@ -639,57 +673,13 @@
   <bean id="vpcVirtualNetworkApplianceManagerImpl" class="com.cloud.network.router.VpcVirtualNetworkApplianceManagerImpl" />
 
   <!--
-    Baremetal components
-  -->
-<!--
-  <bean id="BareMetalDhcp" class="com.cloud.baremetal.networkservice.BaremetalDhcpElement">
-    <property name="name" value="BareMetalDhcp"/>
-  </bean>
-  <bean id="BareMetalPxe" class="com.cloud.baremetal.networkservice.BaremetalPxeElement">
-    <property name="name" value="BareMetalPxe"/>
-  </bean>
-  <bean id="BareMetalUserdata" class="com.cloud.baremetal.networkservice.BaremetalUserdataElement">
-      <property name="name" value="BareMetalUserdata"/>
-  </bean>
-
-  <bean id="BareMetalTemplateAdapter" class="com.cloud.baremetal.manager.BareMetalTemplateAdapter" />
-
-  <bean id="BareMetalDiscoverer" class="com.cloud.baremetal.manager.BareMetalDiscoverer">
-    <property name="name" value="Bare Metal Agent"/>
-  </bean>
-
-  <bean id="BareMetalPlanner" class="com.cloud.baremetal.manager.BareMetalPlanner">
-    <property name="name" value="BareMetal Fit"/>
-  </bean>
-  
-  <bean id="BaremetalGuru" class="com.cloud.baremetal.manager.BareMetalGuru">
-    <property name="name" value="BaremetalGuru"/>
-  </bean>
-
-  <bean id="BaremetalPlannerSelector" class="com.cloud.baremetal.manager.BaremetalPlannerSelector">
-    <property name="name" value="BaremetalPlannerSelector"/>
-  </bean>
-
-  <bean id="BaremetalManager" class="com.cloud.baremetal.manager.BaremetalManagerImpl"/>
-  <bean id="BaremetalDhcpManager" class="com.cloud.baremetal.networkservice.BaremetalDhcpManagerImpl"/>
-  <bean id="BaremetalKickStartPxeService" class="com.cloud.baremetal.networkservice.BaremetalKickStartServiceImpl"/>
-  <bean id="BaremetalPingPxeService" class="com.cloud.baremetal.networkservice.BareMetalPingServiceImpl" />
-  <bean id="BaremetalPxeManager" class="com.cloud.baremetal.networkservice.BaremetalPxeManagerImpl" /> 
-    
-  <bean id="bAREMETAL" class="org.apache.cloudstack.storage.image.format.BAREMETAL" />
-  <bean id="baremetalDhcpDaoImpl" class="com.cloud.baremetal.database.BaremetalDhcpDaoImpl" />
-  <bean id="baremetalPxeDaoImpl" class="com.cloud.baremetal.database.BaremetalPxeDaoImpl" />
--->
-
-  <!--
     Misc components
   -->
+  <bean id="cloudZonesStartupProcessor" class="com.cloud.hypervisor.CloudZonesStartupProcessor" />
+  <bean id="managementServerNode" class="com.cloud.cluster.ManagementServerNode" />
   <bean id="actionEventUtils" class="com.cloud.event.ActionEventUtils" />
   <bean id="agentMonitor" class="com.cloud.agent.manager.AgentMonitor" />
   <bean id="alertGenerator" class="com.cloud.event.AlertGenerator" />
-  <bean id="ancientDataMotionStrategy" class="org.apache.cloudstack.storage.motion.AncientDataMotionStrategy" />
-  <bean id="ancientImageDataStoreProvider" class="org.apache.cloudstack.storage.image.store.AncientImageDataStoreProvider" />
-  <bean id="ancientSnapshotStrategy" class="org.apache.cloudstack.storage.snapshot.strategy.AncientSnapshotStrategy" />
   <bean id="apiDBUtils" class="com.cloud.api.ApiDBUtils" />
   <bean id="apiDiscoveryServiceImpl" class="org.apache.cloudstack.discovery.ApiDiscoveryServiceImpl" />
   <bean id="apiDispatcher" class="com.cloud.api.ApiDispatcher" />
@@ -699,6 +689,7 @@
   <bean id="bAREMETAL" class="org.apache.cloudstack.storage.image.format.BAREMETAL" />
   <bean id="cloudOrchestrator" class="org.apache.cloudstack.platform.orchestration.CloudOrchestrator" />
   <bean id="clusterRestService" class="org.apache.cloudstack.engine.rest.service.api.ClusterRestService" />
+  <bean id="componentContext" class="com.cloud.utils.component.ComponentContext" />
   <bean id="consoleProxyServlet" class="com.cloud.servlet.ConsoleProxyServlet" />
   <bean id="dataCenterResourceManagerImpl" class="org.apache.cloudstack.engine.datacenter.entity.api.DataCenterResourceManagerImpl" />
   <bean id="dataDisk" class="org.apache.cloudstack.engine.subsystem.api.storage.type.DataDisk" />
@@ -706,9 +697,12 @@
   <bean id="dataObjectManagerImpl" class="org.apache.cloudstack.storage.datastore.DataObjectManagerImpl" />
   <bean id="dataStoreManagerImpl" class="org.apache.cloudstack.storage.datastore.DataStoreManagerImpl" />
   <bean id="defaultEndPointSelector" class="org.apache.cloudstack.storage.endpoint.DefaultEndPointSelector" />
+  <bean id="defaultImageDataStoreProvider" class="org.apache.cloudstack.storage.image.store.DefaultImageDataStoreProvider" />
+  <bean id="defaultImageMotionStrategy" class="org.apache.cloudstack.storage.image.motion.DefaultImageMotionStrategy" />
   <bean id="defaultPrimaryDataStoreProviderManagerImpl" class="org.apache.cloudstack.storage.datastore.manager.DefaultPrimaryDataStoreProviderManagerImpl" />
+  <bean id="defaultPrimaryDatastoreProviderImpl" class="org.apache.cloudstack.storage.datastore.provider.DefaultPrimaryDatastoreProviderImpl" />
   <bean id="eventUtils" class="com.cloud.event.EventUtils" />
-  <bean id="globalLoadBalancingRulesServiceImpl" class="org.apache.cloudstack.region.gslb.GlobalLoadBalancingRulesServiceImpl" />
+  <bean id="hypervisorBasedSnapshot" class="org.apache.cloudstack.storage.snapshot.strategy.HypervisorBasedSnapshot" />
   <bean id="hypervsiorHostEndPointRpcServer" class="org.apache.cloudstack.storage.HypervsiorHostEndPointRpcServer" />
   <bean id="iSCSI" class="org.apache.cloudstack.storage.datastore.type.ISCSI" />
   <bean id="iSO" class="org.apache.cloudstack.storage.image.format.ISO" />
@@ -717,6 +711,7 @@
   <bean id="imageDataStoreHelper" class="org.apache.cloudstack.storage.image.datastore.ImageDataStoreHelper" />
   <bean id="imageDataStoreManagerImpl" class="org.apache.cloudstack.storage.image.manager.ImageDataStoreManagerImpl" />
   <bean id="imageFormatHelper" class="org.apache.cloudstack.storage.image.format.ImageFormatHelper" />
+  <bean id="imageMotionServiceImpl" class="org.apache.cloudstack.storage.image.motion.ImageMotionServiceImpl" />
   <bean id="imageServiceImpl" class="org.apache.cloudstack.storage.image.ImageServiceImpl" />
   <bean id="iso" class="org.apache.cloudstack.engine.subsystem.api.storage.type.Iso" />
   <bean id="networkFileSystem" class="org.apache.cloudstack.storage.datastore.type.NetworkFileSystem" />
@@ -731,36 +726,20 @@
   <bean id="rootDisk" class="org.apache.cloudstack.engine.subsystem.api.storage.type.RootDisk" />
   <bean id="snapshotDataFactoryImpl" class="org.apache.cloudstack.storage.snapshot.SnapshotDataFactoryImpl" />
   <bean id="snapshotServiceImpl" class="org.apache.cloudstack.storage.snapshot.SnapshotServiceImpl" />
-  <bean id="snapshotStateMachineManagerImpl" class="org.apache.cloudstack.storage.snapshot.SnapshotStateMachineManagerImpl" />
   <bean id="statsCollector" class="com.cloud.server.StatsCollector" />
-  <bean id="storagePoolAutomationImpl" class="com.cloud.storage.StoragePoolAutomationImpl" />
   <bean id="templateInstallStrategyImpl" class="org.apache.cloudstack.storage.volume.TemplateInstallStrategyImpl" />
   <bean id="unknown" class="org.apache.cloudstack.storage.image.format.Unknown" />
   <bean id="usageEventUtils" class="com.cloud.event.UsageEventUtils" />
   <bean id="userContextInitializer" class="com.cloud.user.UserContextInitializer" />
   <bean id="vHD" class="org.apache.cloudstack.storage.image.format.VHD" />
   <bean id="vMEntityManagerImpl" class="org.apache.cloudstack.engine.cloud.entity.api.VMEntityManagerImpl" />
-  <bean id="virtualMachineEntityFactory" class="org.apache.cloudstack.engine.cloud.entity.api.VirtualMachineEntityFactory" />
   <bean id="virtualMachineEntityImpl" class="org.apache.cloudstack.engine.cloud.entity.api.VirtualMachineEntityImpl" />
   <bean id="virtualMachineRestService" class="org.apache.cloudstack.engine.rest.service.api.VirtualMachineRestService" />
   <bean id="volumeDataFactoryImpl" class="org.apache.cloudstack.storage.volume.VolumeDataFactoryImpl" />
+  <bean id="volumeManagerImpl" class="org.apache.cloudstack.storage.volume.VolumeManagerImpl" />
   <bean id="volumeRestService" class="org.apache.cloudstack.engine.rest.service.api.VolumeRestService" />
   <bean id="volumeServiceImpl" class="org.apache.cloudstack.storage.volume.VolumeServiceImpl" />
   <bean id="volumeTypeHelper" class="org.apache.cloudstack.engine.subsystem.api.storage.type.VolumeTypeHelper" />
   <bean id="zoneRestService" class="org.apache.cloudstack.engine.rest.service.api.ZoneRestService" />
-  <bean id="cloudZonesStartupProcessor" class="com.cloud.hypervisor.CloudZonesStartupProcessor" />
-  <bean id="managementServerNode" class="com.cloud.cluster.ManagementServerNode" />
-  <bean id="testingAllocator" class="com.cloud.agent.manager.allocator.impl.TestingAllocator" />
-  <bean id="domainManagerImpl" class="com.cloud.user.DomainManagerImpl" />
-  <bean id="downloadMonitorImpl" class="com.cloud.storage.download.DownloadMonitorImpl" />
-  <bean id="lBHealthCheckManagerImpl" class="com.cloud.network.lb.LBHealthCheckManagerImpl" />
-  <bean id="mockAgentManagerImpl" class="com.cloud.agent.manager.MockAgentManagerImpl" />
-  <bean id="mockStorageManagerImpl" class="com.cloud.agent.manager.MockStorageManagerImpl" />
-  <bean id="mockVmManagerImpl" class="com.cloud.agent.manager.MockVmManagerImpl" />
-  <bean id="resourceManagerImpl" class="com.cloud.resource.ResourceManagerImpl" />
-  <bean id="simulatorManagerImpl" class="com.cloud.agent.manager.SimulatorManagerImpl" />
-  <bean id="vMSnapshotManagerImpl" class="com.cloud.vm.snapshot.VMSnapshotManagerImpl" />
-  <bean id="volumeManagerImpl" class="com.cloud.storage.VolumeManagerImpl" />
-  <bean id="ClassicalPrimaryDataStoreProvider" class="org.apache.cloudstack.storage.datastore.provider.CloudStackPrimaryDataStoreProviderImpl" />
-  
+
 </beans>
