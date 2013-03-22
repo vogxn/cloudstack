@@ -37,7 +37,6 @@ class TestCaseExecuteEngine(object):
         self.logformat = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
         self.loader = unittest.loader.TestLoader()
         self.suite = None
-        self.format = format
 
         if testcaseLogFile is not None:
             self.logfile = testcaseLogFile
@@ -89,5 +88,4 @@ class TestCaseExecuteEngine(object):
 
     def run(self):
         if self.suite:
-            if self.format == "text":
-                unittest.TextTestRunner(stream=self.testResultLogFile, verbosity=2).run(self.suite)
+            unittest.TextTestRunner(stream=self.testResultLogFile, verbosity=2).run(self.suite)
