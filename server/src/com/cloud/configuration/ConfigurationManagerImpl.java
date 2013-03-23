@@ -87,7 +87,6 @@ import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.DataCenterLinkLocalIpAddressDao;
-import com.cloud.dc.dao.DataCenterLinkLocalIpAddressDaoImpl;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.PodVlanMapDao;
 import com.cloud.dc.dao.VlanDao;
@@ -252,17 +251,19 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     // FIXME - why don't we have interface for DataCenterLinkLocalIpAddressDao?
     @Inject protected DataCenterLinkLocalIpAddressDao _LinkLocalIpAllocDao;
 
-    private int _maxVolumeSizeInGb;
-    private long _defaultPageSize;
+    private int _maxVolumeSizeInGb = Integer.parseInt(Config.MaxVolumeSize.getDefaultValue());
+    private long _defaultPageSize = Long.parseLong(Config.DefaultPageSize.getDefaultValue());
     protected Set<String> configValuesForValidation;
 
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
-        String maxVolumeSizeInGbString = _configDao.getValue("storage.max.volume.size");
-        _maxVolumeSizeInGb = NumbersUtil.parseInt(maxVolumeSizeInGbString, 2000);
+        String maxVolumeSizeInGbString = _configDao.getValue(Config.MaxVolumeSize.key());
+        _maxVolumeSizeInGb = NumbersUtil.parseInt(maxVolumeSizeInGbString, 
+        	Integer.parseInt(Config.MaxVolumeSize.getDefaultValue()));
 
-        String defaultPageSizeString = _configDao.getValue("default.page.size");
-        _defaultPageSize = NumbersUtil.parseLong(defaultPageSizeString, 500L);
+        String defaultPageSizeString = _configDao.getValue(Config.DefaultPageSize.key());
+        _defaultPageSize = NumbersUtil.parseLong(defaultPageSizeString, 
+        	Long.parseLong(Config.DefaultPageSize.getDefaultValue()));
 
         populateConfigValuesForValidationSet();
         return true;
@@ -3335,20 +3336,24 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         String multicastRateStr = _configDao.getValue("multicast.throttling.rate");
         int multicastRate = ((multicastRateStr == null) ? 10 : Integer.parseInt(multicastRateStr));
         tags = cleanupTags(tags);
-        
-        if (specifyVlan != specifyIpRanges) {
-            throw new InvalidParameterValueException("SpecifyVlan should be equal to specifyIpRanges which is " + specifyIpRanges);
-        }
 
         // specifyVlan should always be true for Shared network offerings
         if (!specifyVlan && type == GuestType.Shared) {
             throw new InvalidParameterValueException("SpecifyVlan should be true if network offering's type is " + type);
         }
         
-        //specifyIpRanges should always be false for Isolated offering with Source nat service enabled
-        if (specifyVlan && type == GuestType.Isolated && serviceProviderMap.containsKey(Service.SourceNat)) {
-            throw new InvalidParameterValueException("SpecifyVlan should be false if the network offering type is " 
-                                                        + type + " and service " + Service.SourceNat.getName() + " is supported");
+        //specifyIpRanges should always be true for Shared networks
+        //specifyIpRanges can only be true for Isolated networks with no Source Nat service
+        if (specifyIpRanges) {
+            if (type == GuestType.Isolated) {
+                if (serviceProviderMap.containsKey(Service.SourceNat)) {
+                    throw new InvalidParameterValueException("SpecifyIpRanges can only be true for Shared network offerings and Isolated with no SourceNat service");
+                }
+            }
+        } else {
+            if (type == GuestType.Shared) {
+                throw new InvalidParameterValueException("SpecifyIpRanges should always be true for Shared network offerings");
+            }
         }
 
         // isPersistent should always be false for Shared network Offerings
@@ -3372,7 +3377,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                         + " with availability " + Availability.Required);
             }
         }
-
         
         boolean dedicatedLb = false;
         boolean elasticLb = false;
@@ -3478,6 +3482,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         UserContext.current().setEventDetails(" Id: " + offering.getId() + " Name: " + name);
         return offering;
     }
+
 
     @Override
     public List<? extends NetworkOffering> searchForNetworkOfferings(ListNetworkOfferingsCmd cmd) {

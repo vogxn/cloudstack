@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -683,13 +684,16 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
         String secondaryMountPoint = _mountService.getMountPoint(secStorageUrl);
         String srcOVAFileName = secondaryMountPoint + "/" +  secStorageDir + "/"
             + backupName + "." + ImageFormat.OVA.getFileExtension();
-
+        String snapshotDir = "";
+        if (backupName.contains("/")){
+            snapshotDir = backupName.split("/")[0];
+        }
         String srcFileName = getOVFFilePath(srcOVAFileName);
         if(srcFileName == null) {
             Script command = new Script("tar", 0, s_logger);
             command.add("--no-same-owner");
             command.add("-xf", srcOVAFileName);
-            command.setWorkDir(secondaryMountPoint + "/" +  secStorageDir);
+            command.setWorkDir(secondaryMountPoint + "/" +  secStorageDir + "/" + snapshotDir);
             s_logger.info("Executing command: " + command.toString());
             String result = command.execute();
             if(result != null) {
@@ -730,7 +734,7 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
         String backupUuid = UUID.randomUUID().toString();
         exportVolumeToSecondaryStroage(vmMo, volumePath, secStorageUrl,
             getSnapshotRelativeDirInSecStorage(accountId, volumeId), backupUuid, workerVmName);
-        return backupUuid;
+        return backupUuid + "/" + backupUuid;
     }
 
     private void exportVolumeToSecondaryStroage(VirtualMachineMO vmMo, String volumePath,
@@ -738,8 +742,8 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
         String workerVmName) throws Exception {
 
         String secondaryMountPoint = _mountService.getMountPoint(secStorageUrl);
-        String exportPath =  secondaryMountPoint + "/" + secStorageDir;
-
+        String exportPath =  secondaryMountPoint + "/" + secStorageDir + "/" + exportName;
+        
         synchronized(exportPath.intern()) {
             if(!new File(exportPath).exists()) {
                 Script command = new Script(false, "mkdir", _timeout, s_logger);
@@ -915,7 +919,7 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
 
             // wait if there are already VM snapshot task running
             ManagedObjectReference taskmgr = context.getServiceContent().getTaskManager();
-            ManagedObjectReference[] tasks =  (ManagedObjectReference[]) context.getVimClient().getDynamicProperty(taskmgr, "recentTask");
+            List<ManagedObjectReference> tasks = (ArrayList<ManagedObjectReference>)context.getVimClient().getDynamicProperty(taskmgr, "recentTask");
             for (ManagedObjectReference taskMor : tasks) {
                 TaskInfo info = (TaskInfo) (context.getVimClient().getDynamicProperty(taskMor, "info"));
                 if(info.getEntityName().equals(cmd.getVmName()) && info.getName().equalsIgnoreCase("CreateSnapshot_Task")){
@@ -1048,7 +1052,7 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
 
             // wait if there are already VM revert task running
             ManagedObjectReference taskmgr = context.getServiceContent().getTaskManager();
-            ManagedObjectReference[] tasks =  (ManagedObjectReference[]) context.getVimClient().getDynamicProperty(taskmgr, "recentTask");
+            List<ManagedObjectReference> tasks = (ArrayList<ManagedObjectReference>)context.getVimClient().getDynamicProperty(taskmgr, "recentTask");
             for (ManagedObjectReference taskMor : tasks) {
                 TaskInfo info = (TaskInfo) (context.getVimClient().getDynamicProperty(taskMor, "info"));
                 if(info.getEntityName().equals(cmd.getVmName()) && info.getName().equalsIgnoreCase("RevertToSnapshot_Task")){

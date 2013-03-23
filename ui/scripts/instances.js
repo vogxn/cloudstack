@@ -338,11 +338,12 @@
               notification: function(args) {
                 return 'label.action.start.instance';
               },							
-							complete: function(args) {						  
+							complete: function(args) {
 								if(args.password != null) {
-									alert('Password of the VM is ' + args.password);
+									return 'Password of the VM is ' + args.password;
 								}
-								return 'label.action.start.instance';
+
+								return false;
 							}			
             },
             notification: {
@@ -1242,6 +1243,15 @@
                 }
               }
             ],
+            viewAll: {
+              path: 'network.secondaryNicIps',
+              attachTo: 'ipaddress',
+              title: function(args) {
+                var title = _l('label.menu.ipaddresses') + ' - ' + args.context.nics[0].name;
+                
+                return title;
+              }
+            },
             dataProvider: function(args) {
                     $.ajax({
                      url:createURL("listVirtualMachines&details=nics&id=" + args.context.instances[0].id),

@@ -110,6 +110,7 @@ import com.cloud.agent.api.ModifySshKeysCommand;
 import com.cloud.agent.api.ModifyStoragePoolAnswer;
 import com.cloud.agent.api.ModifyStoragePoolCommand;
 import com.cloud.agent.api.NetworkRulesSystemVmCommand;
+import com.cloud.agent.api.NetworkRulesVmSecondaryIpCommand;
 import com.cloud.agent.api.NetworkUsageAnswer;
 import com.cloud.agent.api.NetworkUsageCommand;
 import com.cloud.agent.api.PingCommand;
@@ -1176,6 +1177,8 @@ ServerResource {
                 return execute((ResizeVolumeCommand) cmd);
             } else if (cmd instanceof CheckNetworkCommand) {
                 return execute((CheckNetworkCommand) cmd);
+            } else if (cmd instanceof NetworkRulesVmSecondaryIpCommand) {
+                return execute((NetworkRulesVmSecondaryIpCommand) cmd);
             } else {
                 s_logger.warn("Unsupported command ");
                 return Answer.createUnsupportedCommandAnswer(cmd);
@@ -2339,7 +2342,7 @@ ServerResource {
         boolean result = add_network_rules(cmd.getVmName(),
                 Long.toString(cmd.getVmId()), cmd.getGuestIp(),
                 cmd.getSignature(), Long.toString(cmd.getSeqNum()),
-                cmd.getGuestMac(), cmd.stringifyRules(), vif, brname);
+                cmd.getGuestMac(), cmd.stringifyRules(), vif, brname, cmd.getSecIpsString());
 
         if (!result) {
             s_logger.warn("Failed to program network rules for vm "
@@ -2748,17 +2751,74 @@ ServerResource {
         return stats;
     }
 
+    protected String VPCNetworkUsage(final String privateIpAddress, final String publicIp,
+            final String option, final String vpcCIDR) {
+        Script getUsage = new Script(_routerProxyPath, s_logger);
+        getUsage.add("vpc_netusage.sh");
+        getUsage.add(privateIpAddress);
+        getUsage.add("-l", publicIp);
+
+        if (option.equals("get")) {
+            getUsage.add("-g");
+        } else if (option.equals("create")) {
+            getUsage.add("-c");
+            getUsage.add("-v", vpcCIDR);
+        } else if (option.equals("reset")) {
+            getUsage.add("-r");
+        } else if (option.equals("vpn")) {
+            getUsage.add("-n");
+        } else if (option.equals("remove")) {
+            getUsage.add("-d");
+        }
+
+        final OutputInterpreter.OneLineParser usageParser = new OutputInterpreter.OneLineParser();
+        String result = getUsage.execute(usageParser);
+        if (result != null) {
+            s_logger.debug("Failed to execute VPCNetworkUsage:" + result);
+            return null;
+        }
+        return usageParser.getLine();
+    }
+
+    protected long[] getVPCNetworkStats(String privateIP, String publicIp, String option) {
+        String result = VPCNetworkUsage(privateIP, publicIp, option, null);
+        long[] stats = new long[2];
+        if (result != null) {
+            String[] splitResult = result.split(":");
+            int i = 0;
+            while (i < splitResult.length - 1) {
+                stats[0] += (new Long(splitResult[i++])).longValue();
+                stats[1] += (new Long(splitResult[i++])).longValue();
+            }
+        }
+        return stats;
+    }
+
     private Answer execute(NetworkUsageCommand cmd) {
-        if (cmd.getOption() != null && cmd.getOption().equals("create")) {
-            String result = networkUsage(cmd.getPrivateIP(), "create", null);
-            NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, result, 0L,
-                    0L);
+        if (cmd.isForVpc()) {
+            if (cmd.getOption() != null && cmd.getOption().equals("create")) {
+                String result = VPCNetworkUsage(cmd.getPrivateIP(),cmd.getGatewayIP(), "create", cmd.getVpcCIDR());
+                NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, result, 0L, 0L);
+                return answer;
+            } else if (cmd.getOption() != null && (cmd.getOption().equals("get") || cmd.getOption().equals("vpn"))) {
+                long[] stats = getVPCNetworkStats(cmd.getPrivateIP(), cmd.getGatewayIP(), cmd.getOption());
+                NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, "", stats[0], stats[1]);
+                return answer;
+            } else {
+                String result = VPCNetworkUsage(cmd.getPrivateIP(),cmd.getGatewayIP(), cmd.getOption(), cmd.getVpcCIDR());
+                NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, result, 0L, 0L);
+                return answer;
+            }
+        } else {
+            if (cmd.getOption() != null && cmd.getOption().equals("create")) {
+                String result = networkUsage(cmd.getPrivateIP(), "create", null);
+                NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, result, 0L, 0L);
+                return answer;
+            }
+            long[] stats = getNetworkStats(cmd.getPrivateIP());
+            NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, "", stats[0], stats[1]);
             return answer;
         }
-        long[] stats = getNetworkStats(cmd.getPrivateIP());
-        NetworkUsageAnswer answer = new NetworkUsageAnswer(cmd, "", stats[0],
-                stats[1]);
-        return answer;
     }
 
     private Answer execute(RebootCommand cmd) {
@@ -3041,7 +3101,7 @@ ServerResource {
         ConsoleDef console = new ConsoleDef("pty", null, null, (short) 0);
         devices.addDevice(console);
 
-        GraphicDef grap = new GraphicDef("vnc", (short) 0, true, vmTO.getVncAddr(), null,
+        GraphicDef grap = new GraphicDef("vnc", (short) 0, true, null, null,
                 null);
         devices.addDevice(grap);
 
@@ -3096,7 +3156,18 @@ ServerResource {
                         default_network_rules_for_systemvm(conn, vmName);
                         break;
                     } else {
-                        default_network_rules(conn, vmName, nic, vmSpec.getId());
+                        List<String> nicSecIps = nic.getNicSecIps();
+                        String secIpsStr;
+                        StringBuilder sb = new StringBuilder();
+                        if (nicSecIps != null) {
+                            for (String ip : nicSecIps) {
+                                sb.append(ip).append(":");
+                            }
+                            secIpsStr = sb.toString();
+                        } else {
+                            secIpsStr = "0:";
+                        }
+                        default_network_rules(conn, vmName, nic, vmSpec.getId(), secIpsStr);
                     }
                 }
             }
@@ -3496,7 +3567,7 @@ ServerResource {
             sscmd.setDataCenter(_dcId);
             sscmd.setResourceType(Storage.StorageResourceType.STORAGE_POOL);
         } catch (CloudRuntimeException e) {
-
+            s_logger.debug("Unable to initialize local storage pool: " + e);
         }
 
         if (sscmd != null) {
@@ -3937,26 +4008,43 @@ ServerResource {
         try {
             dm = conn.domainLookupByUUID(UUID.nameUUIDFromBytes(vmName
                     .getBytes()));
+            int persist = dm.isPersistent();
             if (force) {
-                if (dm.getInfo().state != DomainInfo.DomainState.VIR_DOMAIN_SHUTOFF) {
+                if (dm.isActive() == 1) {
                     dm.destroy();
+                    if (persist == 1) {
+                        dm.undefine();
+                    }
                 }
             } else {
-                if (dm.getInfo().state == DomainInfo.DomainState.VIR_DOMAIN_SHUTOFF) {
+                if (dm.isActive() == 0) {
                     return null;
                 }
                 dm.shutdown();
                 int retry = _stopTimeout / 2000;
-                /* Wait for the domain gets into shutoff state */
-                while ((dm.getInfo().state != DomainInfo.DomainState.VIR_DOMAIN_SHUTOFF)
-                        && (retry >= 0)) {
-                    Thread.sleep(2000);
-                    retry--;
+                /* Wait for the domain gets into shutoff state. When it does
+                   the dm object will no longer work, so we need to catch it. */
+                try {
+                    while ( dm.isActive() == 1 && (retry >= 0)) {
+                        Thread.sleep(2000);
+                        retry--;
+                    }
+                } catch (LibvirtException e) {
+                    String error = e.toString();
+                    if (error.contains("Domain not found")) {
+                        s_logger.debug("successfully shut down vm " + vmName);
+                    } else {
+                        s_logger.debug("Error in waiting for vm shutdown:" + error);
+                    }
                 }
                 if (retry < 0) {
                     s_logger.warn("Timed out waiting for domain " + vmName
                             + " to shutdown gracefully");
                     return Script.ERR_TIMEOUT;
+                } else {
+                    if (persist == 1) {
+                        dm.undefine();
+                    }
                 }
             }
         } catch (LibvirtException e) {
@@ -4347,7 +4435,7 @@ ServerResource {
     }
 
     protected boolean default_network_rules(Connect conn, String vmName,
-            NicTO nic, Long vmId) {
+            NicTO nic, Long vmId, String secIpStr) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -4371,6 +4459,7 @@ ServerResource {
         cmd.add("--vmmac", nic.getMac());
         cmd.add("--vif", vif);
         cmd.add("--brname", brname);
+        cmd.add("--nicsecips", secIpStr);
         String result = cmd.execute();
         if (result != null) {
             return false;
@@ -4433,7 +4522,7 @@ ServerResource {
 
     private boolean add_network_rules(String vmName, String vmId,
             String guestIP, String sig, String seq, String mac, String rules,
-            String vif, String brname) {
+            String vif, String brname, String secIps) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -4449,9 +4538,29 @@ ServerResource {
         cmd.add("--vmmac", mac);
         cmd.add("--vif", vif);
         cmd.add("--brname", brname);
+        cmd.add("--nicsecips", secIps);
         if (rules != null) {
             cmd.add("--rules", newRules);
         }
+        String result = cmd.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean network_rules_vmSecondaryIp (Connect conn, String vmName, String secIp, String action) {
+
+        if (!_can_bridge_firewall) {
+            return false;
+        }
+
+        Script cmd = new Script(_securityGroupPath, _timeout, s_logger);
+        cmd.add("network_rules_vmSecondaryIp");
+        cmd.add("--vmname", vmName);
+        cmd.add("--nicsecips", secIp);
+        cmd.add("--action", action);
+
         String result = cmd.execute();
         if (result != null) {
             return false;
@@ -4542,6 +4651,20 @@ ServerResource {
             success = default_network_rules_for_systemvm(conn, cmd.getVmName());
         } catch (LibvirtException e) {
             s_logger.trace("Ignoring libvirt error.", e);
+        }
+
+        return new Answer(cmd, success, "");
+    }
+
+    private Answer execute(NetworkRulesVmSecondaryIpCommand cmd) {
+        boolean success = false;
+        Connect conn;
+        try {
+            conn = LibvirtConnection.getConnection();
+            success = network_rules_vmSecondaryIp(conn, cmd.getVmName(), cmd.getVmSecIp(), cmd.getAction());
+        } catch (LibvirtException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         return new Answer(cmd, success, "");

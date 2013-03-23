@@ -48,14 +48,10 @@ import org.apache.cloudstack.api.command.admin.user.RegisterCmd;
 import org.apache.cloudstack.api.command.admin.user.UpdateUserCmd;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserAccountJoinDao;
 import com.cloud.api.query.vo.ControlledViewEntity;
-
-
-import org.apache.cloudstack.region.RegionManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
@@ -143,7 +139,6 @@ import com.cloud.vm.dao.InstanceGroupDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
-@Component
 @Local(value = { AccountManager.class, AccountService.class })
 public class AccountManagerImpl extends ManagerBase implements AccountManager, Manager {
     public static final Logger s_logger = Logger.getLogger(AccountManagerImpl.class);
@@ -217,8 +212,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Inject
     private IPAddressDao _ipAddressDao;
     @Inject
-    private RegionManager _regionMgr;
-    @Inject
     private VpcManager _vpcMgr;
     @Inject
     private DomainRouterDao _routerDao;
@@ -228,7 +221,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     private AutoScaleManager _autoscaleMgr;
     @Inject VolumeManager volumeMgr;
 
-    @Inject
     private List<UserAuthenticator> _userAuthenticators;
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AccountChecker"));
@@ -242,6 +234,14 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     List<SecurityChecker> _securityCheckers;
     int _cleanupInterval;
 
+    public List<UserAuthenticator> getUserAuthenticators() {
+    	return _userAuthenticators;
+    }
+    
+    public void setUserAuthenticators(List<UserAuthenticator> authenticators) {
+    	_userAuthenticators = authenticators;
+    }
+    
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         _systemAccount = _accountDao.findById(AccountVO.ACCOUNT_ID_SYSTEM);
@@ -764,7 +764,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_ACCOUNT_CREATE, eventDescription = "creating Account")
     public UserAccount createUserAccount(String userName, String password, String firstName, String lastName, String email, String timezone, String accountName, short accountType,
-                                         Long domainId, String networkDomain, Map<String, String> details) {
+                                         Long domainId, String networkDomain, Map<String, String> details, String accountUUID, String userUUID) {
 
         if (accountName == null) {
             accountName = userName;
@@ -810,11 +810,14 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         txn.start();
 
         // create account
-        AccountVO account = createAccount(accountName, accountType, domainId, networkDomain, details, UUID.randomUUID().toString(), _regionMgr.getId());
+        if(accountUUID == null){
+            accountUUID = UUID.randomUUID().toString();
+        }
+        AccountVO account = createAccount(accountName, accountType, domainId, networkDomain, details, accountUUID);
         long accountId = account.getId();
 
         // create the first user for the account
-        UserVO user = createUser(accountId, userName, password, firstName, lastName, email, timezone);
+        UserVO user = createUser(accountId, userName, password, firstName, lastName, email, timezone, userUUID);
 
         if (accountType == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN) {
             // set registration token
@@ -829,7 +832,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     }
 
     @Override
-    public UserVO createUser(String userName, String password, String firstName, String lastName, String email, String timeZone, String accountName, Long domainId) {
+    public UserVO createUser(String userName, String password, String firstName, String lastName, String email, String timeZone, String accountName, Long domainId, String userUUID) {
 
         // default domain to ROOT if not specified
         if (domainId == null) {
@@ -858,7 +861,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             throw new CloudRuntimeException("The user " + userName + " already exists in domain " + domainId);
         }
         UserVO user = null;
-        user = createUser(account.getId(), userName, password, firstName, lastName, email, timeZone);
+        user = createUser(account.getId(), userName, password, firstName, lastName, email, timeZone, userUUID);
         return user;
     }
 
@@ -1646,7 +1649,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
     @Override
     @DB
-    public AccountVO createAccount(String accountName, short accountType, Long domainId, String networkDomain, Map details, String uuid, int regionId) {
+    public AccountVO createAccount(String accountName, short accountType, Long domainId, String networkDomain, Map details, String uuid) {
         // Validate domain
         Domain domain = _domainMgr.getDomain(domainId);
         if (domain == null) {
@@ -1690,7 +1693,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         Transaction txn = Transaction.currentTxn();
         txn.start();
 
-        AccountVO account = _accountDao.persist(new AccountVO(accountName, domainId, networkDomain, accountType, uuid, regionId));
+        AccountVO account = _accountDao.persist(new AccountVO(accountName, domainId, networkDomain, accountType, uuid));
 
         if (account == null) {
             throw new CloudRuntimeException("Failed to create account name " + accountName + " in domain id=" + domainId);
@@ -1714,7 +1717,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_USER_CREATE, eventDescription = "creating User")
-    public UserVO createUser(long accountId, String userName, String password, String firstName, String lastName, String email, String timezone) {
+    public UserVO createUser(long accountId, String userName, String password, String firstName, String lastName, String email, String timezone, String userUUID) {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Creating user: " + userName + ", accountId: " + accountId + " timezone:" + timezone);
         }
@@ -1730,30 +1733,10 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             throw new CloudRuntimeException("Failed to encode password");
         }
 
-        UserVO user = _userDao.persist(new UserVO(accountId, userName, encodedPassword, firstName, lastName, email, timezone, UUID.randomUUID().toString(), _regionMgr.getId()));
-
-        return user;
-    }
-
-    //ToDo Add events??
-    public UserVO createUser(long accountId, String userName, String password, String firstName, String lastName, String email, String timezone, String uuid, int regionId) {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Creating user: " + userName + ", accountId: " + accountId + " timezone:" + timezone);
+        if(userUUID == null){
+            userUUID =  UUID.randomUUID().toString();
         }
-
-        String encodedPassword = null;
-        for (Iterator<UserAuthenticator> en = _userAuthenticators.iterator(); en.hasNext();) {
-            UserAuthenticator authenticator = en.next();
-            encodedPassword = authenticator.encode(password);
-            if (encodedPassword != null) {
-                break;
-            }
-        }
-        if (encodedPassword == null) {
-            throw new CloudRuntimeException("Failed to encode password");
-        }
-
-        UserVO user = _userDao.persist(new UserVO(accountId, userName, encodedPassword, firstName, lastName, email, timezone, uuid, regionId));
+        UserVO user = _userDao.persist(new UserVO(accountId, userName, encodedPassword, firstName, lastName, email, timezone, userUUID));
 
         return user;
     }
@@ -1983,7 +1966,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
     @Override @DB
     public String[] createApiKeyAndSecretKey(RegisterCmd cmd) {
-        //Send keys to other Regions
         Long userId = cmd.getId();
 
         User user = getUserIncludingRemoved(userId);
