@@ -59,9 +59,9 @@ $(document).ready(function() {
 	*/
 	if ($.urlParam('loginUrl') != 0) {
 		$.cookie('loginUrl', $.urlParam('loginUrl'), { expires: 1});
-	  document.location.href = '/client/';
+		document.location.href = window.location.href.substring(0, window.location.href.indexOf('?'));
 	}
-	
+
 	/*
 	condition 2: If window.location.href does not contain parameter 'loginUrl' but cookie 'loginUrl' exists,
 	save the cookie's value to g_regionUrlParam (a global variable for switching regions),
