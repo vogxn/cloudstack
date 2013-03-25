@@ -261,6 +261,4 @@ public interface NetworkModel {
 	String getStartIpv6Address(long id);
 
     Nic getPlaceholderNic(Network network, Long podId);
-
-    boolean isProviderEnabledInZone(long zoneId, String provider);
 }

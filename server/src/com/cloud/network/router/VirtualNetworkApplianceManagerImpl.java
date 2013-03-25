@@ -303,6 +303,8 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
     @Inject
     VpnUserDao _vpnUsersDao;
     @Inject
+    RemoteAccessVpnDao _remoteAccessVpnDao;
+    @Inject
     RulesManager _rulesMgr;
     @Inject
     NetworkDao _networkDao;
@@ -1275,22 +1277,13 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                      * We update the router pair which the lower id router owned by this mgmt server, in order
                      * to prevent duplicate update of router status from cluster mgmt servers
                      */
-                    DomainRouterVO router0 = routers.get(0);
-                    DomainRouterVO router1 = routers.get(1);
-                    DomainRouterVO router = router0;
-                    if ((router0.getId() < router1.getId()) && router0.getHostId() != null) {
-                    	router = router0;
-                    } else {
-                    	router = router1;
-                    }
-                    if (router.getHostId() == null) {
-                    	s_logger.debug("Skip router pair (" + router0.getInstanceName() + "," + router1.getInstanceName() + ") due to can't find host");
-                    	continue;
+                    DomainRouterVO router = routers.get(0);
+                    if (routers.get(1).getId() < router.getId()) {
+                        router = routers.get(1);
                     }
                     HostVO host = _hostDao.findById(router.getHostId());
                     if (host == null || host.getManagementServerId() == null ||
                             host.getManagementServerId() != ManagementServerNode.getManagementServerId()) {
-                    	s_logger.debug("Skip router pair (" + router0.getInstanceName() + "," + router1.getInstanceName() + ") due to not belong to this mgmt server");
                         continue;
                     }
                 updateRoutersRedundantState(routers);
@@ -1706,30 +1699,30 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
             String defaultNetworkStartIp = null, defaultNetworkStartIpv6 = null;
             if (!setupPublicNetwork) {
             	if (guestNetwork.getCidr() != null) {
-            	    //Check the placeholder nic, and if it's ip address is not empty, allocate it from there
-            	    String requestedGateway = null;
-            	    if (guestNetwork.getGateway() != null) {
-            	        requestedGateway = guestNetwork.getGateway();
-            	    } else if (plan != null && plan.getPodId() != null) {
-            	        Pod pod = _configMgr.getPod(plan.getPodId());
-            	        requestedGateway = pod.getGateway();
-            	    }
-            	    Nic placeholder = _networkModel.getPlaceholderNic(guestNetwork, null);
-            	    if (placeholder != null) {
-            	        s_logger.debug("Requesting ip address " + placeholder.getIp4Address() + " stored in placeholder nic for the network " + guestNetwork);
-            	        defaultNetworkStartIp = placeholder.getIp4Address();
-            	    } else {
-            	        String startIp = _networkModel.getStartIpAddress(guestNetwork.getId());
+		    //Check the placeholder nic, and if it's ip address is not empty, allocate it from there
+		    String requestedGateway = null;
+		    if (guestNetwork.getGateway() != null) {
+		        requestedGateway = guestNetwork.getGateway();
+		    } else if (plan != null && plan.getPodId() != null) {
+		        Pod pod = _configMgr.getPod(plan.getPodId());
+		        requestedGateway = pod.getGateway();
+		    }
+		    Nic placeholder = _networkModel.getPlaceholderNic(guestNetwork, null);
+		    if (placeholder != null) {
+		        s_logger.debug("Requesting ip address " + placeholder.getIp4Address() + " stored in placeholder nic for the network " + guestNetwork);
+		        defaultNetworkStartIp = placeholder.getIp4Address();
+		    } else {
+		        String startIp = _networkModel.getStartIpAddress(guestNetwork.getId());
                         if (startIp != null && _ipAddressDao.findByIpAndSourceNetworkId(guestNetwork.getId(), startIp).getAllocatedTime() == null) {
                             defaultNetworkStartIp = startIp;
                         } else if (s_logger.isDebugEnabled()){
-                            s_logger.debug("First ip " + startIp + " in network id=" + guestNetwork.getId() + 
+                            s_logger.debug("First ip " + startIp + " in network id=" + guestNetwork.getId() +
                                     " is already allocated, can't use it for domain router; will get random ip address from the range");
                         }
-            	    }
+		    }
             	}
             	
-            	//FIXME - get ipv6 stored in the placeholder
+		//FIXME - get ipv6 stored in the placeholder
             	if (guestNetwork.getIp6Cidr() != null) {
             		String startIpv6 = _networkModel.getStartIpv6Address(guestNetwork.getId());
             		if (startIpv6 != null && _ipv6Dao.findByNetworkIdAndIp(guestNetwork.getId(), startIpv6) == null) {
@@ -2344,7 +2337,7 @@ public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements V
                 }
       
                 if (_networkModel.isProviderSupportServiceInNetwork(guestNetworkId, Service.Vpn, provider)) {
-                    RemoteAccessVpn vpn = _vpnDao.findByPublicIpAddress(ip.getId());
+                    RemoteAccessVpn vpn = _vpnDao.findById(ip.getId());
                     if (vpn != null) {
                         vpns.add(vpn);
                     }
