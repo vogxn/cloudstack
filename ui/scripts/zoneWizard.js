@@ -322,7 +322,7 @@
 
           if (args.data['network-model'] == 'Basic') {
             args.$form.find('[rel=networkOfferingId]').show();
-            args.$form.find('[rel=guestcidraddress]').hide();						
+            args.$form.find('[rel=guestcidraddress]').hide();
 						args.$form.find('[rel=ip6dns1]').hide();
 						args.$form.find('[rel=ip6dns2]').hide();
           }
@@ -333,10 +333,10 @@
               args.$form.find('[rel=guestcidraddress]').show();
 						else //args.data["zone-advanced-sg-enabled"] ==	"on
 						  args.$form.find('[rel=guestcidraddress]').hide();
-          					  
+
 						args.$form.find('[rel=ip6dns1]').show();
 						args.$form.find('[rel=ip6dns2]').show();
-					}													
+					}
 										
           setTimeout(function() {
             if ($form.find('input[name=ispublic]').is(':checked')) {
@@ -1185,32 +1185,16 @@
            scope: {
                     label: 'label.scope',
                     select: function(args) {
-                    
-             var selectedHypervisorObj = {
-                hypervisortype: $.isArray(args.context.zones[0].hypervisor) ?
-                  // We want the cluster's hypervisor type
-                  args.context.zones[0].hypervisor[1] : args.context.zones[0].hypervisor
-              };
 
-              if(selectedHypervisorObj == null) {
-                return;
-              }
+            var scope = [
+                        { id: 'zone', description: _l('label.zone.wide') },
+                        { id: 'cluster', description: _l('label.cluster') },
+                        { id: 'host', description: _l('label.host') }
+                      ];
 
-                // ZWPS is supported only for KVM as the hypervisor
-             if(selectedHypervisorObj.hypervisortype != "KVM"){
-                       var scope=[];
-                       scope.push({ id: 'cluster', description: _l('label.cluster') });
-                       scope.push({ id: 'host', description: _l('label.host') });
-                       args.response.success({data: scope});
-                    }
-
-              else {
-                       var scope=[];
-                       scope.push({ id: 'zone', description: _l('label.zone.wide') });
-                       scope.push({ id: 'cluster', description: _l('label.cluster') });
-                       scope.push({ id: 'host', description: _l('label.host') });
-                       args.response.success({data: scope});
-                    }
+                      args.response.success({
+                        data: scope
+                      });
 
                 }
 
