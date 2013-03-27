@@ -201,7 +201,7 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
                 s_daoMaps.put(interphace, this);
             }
         }
-  
+
         _table = DbUtil.getTableName(_entityBeanType);
 
         final SqlGenerator generator = new SqlGenerator(_entityBeanType);
