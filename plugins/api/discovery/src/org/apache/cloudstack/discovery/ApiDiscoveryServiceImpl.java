@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.*;
 import org.apache.cloudstack.api.command.user.discovery.ListApisCmd;
 import org.apache.cloudstack.api.response.ApiDiscoveryResponse;
 import org.apache.cloudstack.api.response.ApiParameterResponse;
+import org.apache.cloudstack.api.response.ApiResponseResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -96,7 +97,7 @@ public class ApiDiscoveryServiceImpl implements ApiDiscoveryService {
 
             Field[] responseFields = apiCmdAnnotation.responseObject().getDeclaredFields();
             for(Field responseField: responseFields) {
-                ApiDiscoveryResponse responseResponse = getFieldResponseMap(responseField);
+                ApiResponseResponse responseResponse = getFieldResponseMap(responseField);
                 response.addApiResponse(responseResponse);
             }
 
@@ -130,14 +131,14 @@ public class ApiDiscoveryServiceImpl implements ApiDiscoveryService {
         return responseApiNameListMap;
     }
 
-    private ApiDiscoveryResponse getFieldResponseMap(Field responseField) {
-        ApiDiscoveryResponse responseResponse = new ApiDiscoveryResponse();
+    private ApiResponseResponse getFieldResponseMap(Field responseField) {
+        ApiResponseResponse responseResponse = new ApiResponseResponse();
         SerializedName serializedName = responseField.getAnnotation(SerializedName.class);
-        if(serializedName != null) {
+        Param param = responseField.getAnnotation(Param.class);
+        if (serializedName != null && param != null) {
             responseResponse.setName(serializedName.value());
-            Param param = responseField.getAnnotation(Param.class);
-            if (param != null)
-                responseResponse.setDescription(param.description());
+            responseResponse.setDescription(param.description());
+            responseResponse.setType(responseField.getType().getSimpleName().toLowerCase());
             //If response is not of primitive type - we have a nested entity
             Class fieldClass = param.responseObject();
             if (fieldClass != null) {
@@ -146,14 +147,15 @@ public class ApiDiscoveryServiceImpl implements ApiDiscoveryService {
                     String superName = superClass.getName();
                     if (superName.equals(BaseResponse.class.getName())) {
                         Field[] fields = fieldClass.getDeclaredFields();
-                        for (Field field : fields){
-                            ApiDiscoveryResponse innerResponse = getFieldResponseMap(field);
-                            responseResponse.addApiResponse(innerResponse);
+                        for (Field field : fields) {
+                            ApiResponseResponse innerResponse = getFieldResponseMap(field);
+                            if (innerResponse != null) {
+                                responseResponse.addApiResponse(innerResponse);
+                            }
                         }
                     }
                 }
             }
-            responseResponse.setType(responseField.getType().getSimpleName().toLowerCase());
         }
         return responseResponse;
     }

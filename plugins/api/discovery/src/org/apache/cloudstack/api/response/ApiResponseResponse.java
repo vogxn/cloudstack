@@ -21,6 +21,9 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 import org.apache.cloudstack.api.BaseResponse;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class ApiResponseResponse extends BaseResponse {
     @SerializedName(ApiConstants.NAME) @Param(description="the name of the api response field")
     private String name;
@@ -30,6 +33,13 @@ public class ApiResponseResponse extends BaseResponse {
 
     @SerializedName(ApiConstants.TYPE) @Param(description="response field type")
     private String type;
+
+    @SerializedName(ApiConstants.RESPONSE)  @Param(description="api response fields")
+    private Set<ApiResponseResponse> apiResponse;
+
+    public ApiResponseResponse() {
+        apiResponse = new HashSet<ApiResponseResponse>();
+    }
 
     public void setName(String name) {
         this.name = name;
@@ -41,5 +51,9 @@ public class ApiResponseResponse extends BaseResponse {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public void addApiResponse(ApiResponseResponse apiResponse) {
+        this.apiResponse.add(apiResponse);
     }
 }
