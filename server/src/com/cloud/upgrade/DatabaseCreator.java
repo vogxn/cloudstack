@@ -119,11 +119,11 @@ public class DatabaseCreator {
     }
 
     public static void main(String[] args) {
-    	
-    	ClassPathXmlApplicationContext appContext = new ClassPathXmlApplicationContext(
-    	        new String[] {"/com/cloud/upgrade/databaseCreatorContext.xml"});
-    	appContext.getBean(ComponentContext.class);
-    	
+
+	ClassPathXmlApplicationContext appContext = new ClassPathXmlApplicationContext(
+	        new String[] {"/com/cloud/upgrade/databaseCreatorContext.xml"});
+	appContext.getBean(ComponentContext.class);
+
         String dbPropsFile = "";
         List<String> sqlFiles = new ArrayList<String>();
         List<String> upgradeClasses = new ArrayList<String>();
