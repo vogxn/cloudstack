@@ -21,7 +21,6 @@ import com.cloud.api.ApiResponseGsonHelper;
 import com.cloud.api.ApiServer;
 import com.cloud.utils.encoding.URLEncoder;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.apache.cloudstack.api.ApiConstants;
@@ -62,8 +61,7 @@ public class ApiResponseSerializer {
 
     public static String toJSONSerializedString(ResponseObject result) {
         if (result != null) {
-            ExclusionStrategy excludes = new EmptyFieldExclusionStrategy();
-            Gson gson = ApiResponseGsonHelper.getBuilder().excludeFieldsWithModifiers(Modifier.TRANSIENT).setExclusionStrategies(excludes).create();
+            Gson gson = ApiResponseGsonHelper.getBuilder().excludeFieldsWithModifiers(Modifier.TRANSIENT).create();
 
             StringBuilder sb = new StringBuilder();
 
