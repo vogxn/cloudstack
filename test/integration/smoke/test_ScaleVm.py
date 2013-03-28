@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -41,12 +41,12 @@ class Services:
                     "firstname": "Test",
                     "lastname": "User",
                     "username": "test",
-                    # Random characters are appended in create account to 
+                    # Random characters are appended in create account to
                     # ensure unique username generated each time
                     "password": "password",
                 },
                 "small":
-                # Create a small virtual machine instance with disk offering 
+                # Create a small virtual machine instance with disk offering
                 {
                     "displayname": "testserver",
                     "username": "root", # VM creds for SSH
@@ -61,7 +61,7 @@ class Services:
                 {
                  "small":
                     {
-                     # Small service offering ID to for change VM 
+                     # Small service offering ID to for change VM
                      # service offering from medium to small
                         "name": "SmallInstance",
                         "displaytext": "SmallInstance",
@@ -71,7 +71,7 @@ class Services:
                     },
                 "big":
                     {
-                     # Big service offering ID to for change VM 
+                     # Big service offering ID to for change VM
                         "name": "BigInstance",
                         "displaytext": "BigInstance",
                         "cpunumber": 1,
@@ -127,7 +127,7 @@ class TestScaleVm(cloudstackTestCase):
                                     cls.api_client,
                                     cls.services["service_offerings"]["small"]
                                     )
-        
+
         cls.big_offering = ServiceOffering.create(
                                     cls.api_client,
                                     cls.services["service_offerings"]["big"]
@@ -166,22 +166,22 @@ class TestScaleVm(cloudstackTestCase):
 
     @attr(tags = ["advanced", "basic", "multicluster", "storagemotion", "xenserver"])
     def test_01_scale_vm(self):
-        """Test scale virtual machine 
+        """Test scale virtual machine
         """
         # Validate the following
         # Scale up the vm and see if it scales to the new svc offering and is finally in running state
-        
-      
-      
+
+
+
         self.debug("Scaling VM-ID: %s to service offering: %s" % (
                                         self.virtual_machine.id,
                                         self.big_offering.id
                                         ))
-        
+
         cmd = scaleVirtualMachine.scaleVirtualMachineCmd()
         cmd.serviceofferingid = self.big_offering.id
         cmd.id = self.virtual_machine.id
-        self.apiclient.scaleVirtualMachine(cmd)  
+        self.apiclient.scaleVirtualMachine(cmd)
 
         list_vm_response = list_virtual_machines(
                                             self.apiclient,
