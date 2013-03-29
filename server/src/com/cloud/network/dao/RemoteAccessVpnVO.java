@@ -53,16 +53,16 @@ public class RemoteAccessVpnVO implements RemoteAccessVpn {
     
     @Column(name="state")
     private State state;
-    
+
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="id")
     private long id;
-    
+
     @Column(name="uuid")
     private String uuid;
 
-    public RemoteAccessVpnVO() { 
+    public RemoteAccessVpnVO() {
         this.uuid = UUID.randomUUID().toString();
     }
 

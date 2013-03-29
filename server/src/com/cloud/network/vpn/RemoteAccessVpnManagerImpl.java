@@ -184,15 +184,15 @@ public class RemoteAccessVpnManagerImpl extends ManagerBase implements RemoteAcc
         long startIp = NetUtils.ip2Long(range[0]);
         String newIpRange = NetUtils.long2Ip(++startIp) + "-" + range[1];
         String sharedSecret = PasswordGenerator.generatePresharedKey(_pskLength);
-        
+
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        
+
         _rulesMgr.reservePorts(ipAddr, NetUtils.UDP_PROTO, Purpose.Vpn, openFirewall, caller, NetUtils.VPN_PORT, NetUtils.VPN_L2TP_PORT, NetUtils.VPN_NATT_PORT);
         vpnVO = new RemoteAccessVpnVO(ipAddr.getAccountId(), ipAddr.getDomainId(), ipAddr.getAssociatedWithNetworkId(),
                 publicIpId, range[0], newIpRange, sharedSecret);
         RemoteAccessVpn vpn = _remoteAccessVpnDao.persist(vpnVO);
-        
+
         txn.commit();
         return vpn;
     }
