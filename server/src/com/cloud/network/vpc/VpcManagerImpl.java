@@ -1002,7 +1002,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
     
     @DB
     @Override
-    public void validateNtwkOffForNtwkInVpc(Long networkId, long newNtwkOffId, String newCidr, 
+    public void validateNtwkOffForNtwkInVpc(Long networkId, long newNtwkOffId, String newCidr,
             String newNetworkDomain, Vpc vpc, String gateway, Account networkOwner) {
         
         NetworkOffering guestNtwkOff = _configMgr.getNetworkOffering(newNtwkOffId);
@@ -1010,10 +1010,10 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
         if (guestNtwkOff == null) {
             throw new InvalidParameterValueException("Can't find network offering by id specified");
         }
-        
+
         if (networkId == null) {
             //1) Validate attributes that has to be passed in when create new guest network
-            validateNewVpcGuestNetwork(newCidr, gateway, networkOwner, vpc, newNetworkDomain); 
+            validateNewVpcGuestNetwork(newCidr, gateway, networkOwner, vpc, newNetworkDomain);
         }
 
         //2) validate network offering attributes
@@ -1255,7 +1255,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
         }  
     }
     
-    
+
     @Override
     public PrivateGateway getVpcPrivateGateway(long id) {
         VpcGateway gateway = _vpcGatewayDao.findById(id);
@@ -1996,7 +1996,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
 
         return ipToReturn;
     }
-    
+
 
     @Override
     public List<HypervisorType> getSupportedVpcHypervisors() {

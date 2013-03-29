@@ -1723,6 +1723,12 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
             _vpcMgr.validateNtwkOffForNtwkInVpc(networkId, networkOfferingId, null, null, vpc, null, _accountMgr.getAccount(network.getAccountId()));
         }
 
+        //perform below validation if the network is vpc network
+        if (network.getVpcId() != null && networkOfferingId != null) {
+            Vpc vpc = _vpcMgr.getVpc(network.getVpcId());
+            _vpcMgr.validateNtwkOffForNtwkInVpc(networkId, networkOfferingId, null, null, vpc, null, _accountMgr.getAccount(network.getAccountId()));
+        }
+
         // don't allow to update network in Destroy state
         if (network.getState() == Network.State.Destroy) {
             throw new InvalidParameterValueException("Don't allow to update network in state " + Network.State.Destroy);

@@ -47,10 +47,10 @@ public interface VpcManager extends VpcService{
      */
     List<? extends Vpc> getVpcsForAccount(long accountId);
 
-    
+
     /**
      * Destroys the VPC
-     * 
+     *
      * @param vpc
      * @param caller TODO
      * @param callerUserId TODO
@@ -63,7 +63,7 @@ public interface VpcManager extends VpcService{
 
     /**
      * Returns true if the IP is allocated to the VPC; false otherwise
-     * 
+     *
      * @param ip
      * @return
      */
@@ -72,7 +72,7 @@ public interface VpcManager extends VpcService{
 
     /**
      * Disassociates the public IP address from VPC
-     * 
+     *
      * @param ipId
      * @param networkId
      */
@@ -81,7 +81,7 @@ public interface VpcManager extends VpcService{
 
     /**
      * Creates guest network in the VPC
-     * 
+     *
      * @param ntwkOffId
      * @param name
      * @param displayText
@@ -110,7 +110,7 @@ public interface VpcManager extends VpcService{
 
     /**
      * Assigns source nat public IP address to VPC
-     * 
+     *
      * @param owner
      * @param vpc
      * @return public IP address object
@@ -122,7 +122,7 @@ public interface VpcManager extends VpcService{
 
     /**
      * Validates network offering to find if it can be used for network creation in VPC
-     * 
+     *
      * @param guestNtwkOff
      * @param supportedSvcs TODO
      */
@@ -133,16 +133,16 @@ public interface VpcManager extends VpcService{
      * @return list of hypervisors that are supported by VPC
      */
     List<HypervisorType> getSupportedVpcHypervisors();
-    
-    
+
+
     /**
      * Lists all the services and providers that the current VPC suppots
      * @param vpcOffId
-     * @return map of Service to Provider(s) map 
+     * @return map of Service to Provider(s) map
      */
     Map<Service, Set<Provider>> getVpcOffSvcProvidersMap(long vpcOffId);
-    
-    
+
+
     /**
      * Returns VPC that is ready to be used
      * @param vpcId
@@ -152,7 +152,7 @@ public interface VpcManager extends VpcService{
 
 
     /**
-     * Performs network offering validation to determine if it can be used for network upgrade inside the VPC 
+     * Performs network offering validation to determine if it can be used for network upgrade inside the VPC
      * @param networkId
      * @param newNtwkOffId
      * @param newCidr

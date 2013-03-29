@@ -131,7 +131,7 @@ public class UpdateNetworkCmd extends BaseAsyncCmd {
 
         Network result = _networkService.updateGuestNetwork(getId(), getNetworkName(), getDisplayText(), callerAccount,
                     callerUser, getNetworkDomain(), getNetworkOfferingId(), getChangeCidr(), getGuestVmCidr());
-        
+
 
         if (result != null) {
             NetworkResponse response = _responseGenerator.createNetworkResponse(result);
