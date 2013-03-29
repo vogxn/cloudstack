@@ -114,6 +114,7 @@ Requires: %{name}-common = %{_ver}
 Requires: libvirt
 Requires: bridge-utils
 Requires: ebtables
+Requires: ipset
 Requires: jsvc
 Requires: jakarta-commons-daemon
 Requires: jakarta-commons-daemon-jsvc
@@ -397,7 +398,7 @@ fi
 # save old configs if they exist (for upgrade). Otherwise we may lose them
 # when the old packages are erased. There are a lot of properties files here.
 if [ -d "%{_sysconfdir}/cloud" ] ; then
-    mv %{_sysconfdir}/cloud %{_sysconfdir}/cloudr.rpmsave
+    mv %{_sysconfdir}/cloud %{_sysconfdir}/cloud.rpmsave
 fi
 
 %post agent
