@@ -57,29 +57,29 @@ import com.cloud.utils.component.ComponentContext;
 @ContextConfiguration(locations="classpath:/createNetworkOffering.xml")
 
 public class CreateNetworkOfferingTest extends TestCase{
-    
+
     @Inject
     ConfigurationManager configMgr;
-    
+
     @Inject
     ConfigurationDao configDao;
-    
+
     @Inject
     NetworkOfferingDao offDao;
-    
+
     @Inject
     NetworkOfferingServiceMapDao mapDao;
-    
+
     @Inject
     AccountManager accountMgr;
-    
+
     @Before
     public void setUp() {
-    	ComponentContext.initComponentsLifeCycle();
-    	
+	ComponentContext.initComponentsLifeCycle();
+
         ConfigurationVO configVO = new ConfigurationVO("200", "200","200","200","200","200");
         Mockito.when(configDao.findByName(Mockito.anyString())).thenReturn(configVO);
-        
+
         Mockito.when(offDao.persist(Mockito.any(NetworkOfferingVO.class))).thenReturn(new NetworkOfferingVO());
         Mockito.when(mapDao.persist(Mockito.any(NetworkOfferingServiceMapVO.class))).thenReturn(new NetworkOfferingServiceMapVO());
         Mockito.when(accountMgr.getSystemUser()).thenReturn(new UserVO(1));
@@ -96,7 +96,7 @@ public class CreateNetworkOfferingTest extends TestCase{
                 null, false, null, true, false);
         assertNotNull("Shared network offering with specifyVlan=true failed to create ", off);
     }
-    
+
     @Test
     public void createSharedNtwkOffWithNoVlan() {
         try {
@@ -107,16 +107,16 @@ public class CreateNetworkOfferingTest extends TestCase{
         } catch (InvalidParameterValueException ex) {
         }
     }
-    
+
     @Test
     public void createSharedNtwkOffWithSpecifyIpRanges() {
         NetworkOfferingVO off = configMgr.createNetworkOffering("shared", "shared", TrafficType.Guest, null, true,
                 Availability.Optional, 200, null, false, Network.GuestType.Shared, false,
                 null, false, null, true, false);
-        
+
         assertNotNull("Shared network offering with specifyIpRanges=true failed to create ", off);
     }
-    
+
     @Test
     public void createSharedNtwkOffWithoutSpecifyIpRanges() {
         try {
@@ -138,10 +138,10 @@ public class CreateNetworkOfferingTest extends TestCase{
         NetworkOfferingVO off = configMgr.createNetworkOffering("isolated", "isolated", TrafficType.Guest, null, false,
                 Availability.Optional, 200, serviceProviderMap, false, Network.GuestType.Isolated, false,
                 null, false, null, false, false);
-        
+
         assertNotNull("Isolated network offering with specifyIpRanges=false failed to create ", off);
     }
-    
+
     @Test
     public void createIsolatedNtwkOffWithVlan() {
         Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
@@ -152,9 +152,9 @@ public class CreateNetworkOfferingTest extends TestCase{
                 Availability.Optional, 200, serviceProviderMap, false, Network.GuestType.Isolated, false,
                 null, false, null, false, false);
         assertNotNull("Isolated network offering with specifyVlan=true wasn't created", off);
-       
+
     }
-    
+
     @Test
     public void createIsolatedNtwkOffWithSpecifyIpRangesAndSourceNat() {
         try {
@@ -169,16 +169,16 @@ public class CreateNetworkOfferingTest extends TestCase{
         } catch (InvalidParameterValueException ex) {
         }
     }
-    
+
     @Test
     public void createIsolatedNtwkOffWithSpecifyIpRangesAndNoSourceNat() {
-        
+
         Map<Service, Set<Provider>> serviceProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
         Set<Network.Provider> vrProvider = new HashSet<Network.Provider>();
         NetworkOfferingVO off = configMgr.createNetworkOffering("isolated", "isolated", TrafficType.Guest, null, false,
                 Availability.Optional, 200, serviceProviderMap, false, Network.GuestType.Isolated, false,
                 null, false, null, true, false);
         assertNotNull("Isolated network offering with specifyIpRanges=true and with no sourceNatService, failed to create", off);
-        
+
     }
 }
