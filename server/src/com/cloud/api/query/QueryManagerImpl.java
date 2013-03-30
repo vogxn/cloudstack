@@ -2105,7 +2105,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
                 domainRecord = _domainDao.findById(domainRecord.getParent());
                 domainIds.add(domainRecord.getId());
             }
-            sc.addAnd("domainId", SearchCriteria.Op.IN, domainIds);
+            sc.addAnd("domainId", SearchCriteria.Op.IN, domainIds.toArray());
 
             // include also public offering if no keyword, name and id specified
             if ( keyword == null && name == null && id == null ){
@@ -2238,7 +2238,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
                 }
                 // domainId == null (public zones) or domainId IN [all domain id up to root domain]
                 SearchCriteria<DataCenterJoinVO> sdc = _dcJoinDao.createSearchCriteria();
-                sdc.addOr("domainId", SearchCriteria.Op.IN, domainIds);
+                sdc.addOr("domainId", SearchCriteria.Op.IN, domainIds.toArray());
                 sdc.addOr("domainId", SearchCriteria.Op.NULL);
                 sc.addAnd("domain", SearchCriteria.Op.SC, sdc);
 
@@ -2268,7 +2268,7 @@ public class QueryManagerImpl extends ManagerBase implements QueryService {
 
                 // domainId == null (public zones) or domainId IN [all domain id up to root domain]
                 SearchCriteria<DataCenterJoinVO> sdc = _dcJoinDao.createSearchCriteria();
-                sdc.addOr("domainId", SearchCriteria.Op.IN, domainIds);
+                sdc.addOr("domainId", SearchCriteria.Op.IN, domainIds.toArray());
                 sdc.addOr("domainId", SearchCriteria.Op.NULL);
                 sc.addAnd("domain", SearchCriteria.Op.SC, sdc);
 

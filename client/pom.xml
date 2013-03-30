@@ -219,6 +219,16 @@
       <artifactId>cloud-plugin-hypervisor-simulator</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.cloudstack</groupId>
+      <artifactId>cloud-plugin-hypervisor-ucs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.cloudstack</groupId>
+        <artifactId>cloud-plugin-storage-volume-default</artifactId>
+        <version>${project.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <defaultGoal>install</defaultGoal>

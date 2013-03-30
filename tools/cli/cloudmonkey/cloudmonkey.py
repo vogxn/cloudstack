@@ -261,42 +261,8 @@ class CloudMonkeyShell(cmd.Cmd, object):
         if response is None:
             return
 
-        isAsync = isAsync and (self.asyncblock == "true")
-        responsekey = filter(lambda x: 'response' in x, response.keys())[0]
-        if isAsync and 'jobid' in response[responsekey]:
-            jobId = response[responsekey]['jobid']
-            command = "queryAsyncJobResult"
-            requests = {'jobid': jobId}
-            timeout = int(self.timeout)
-            pollperiod = 3
-            progress = 1
-            while timeout > 0:
-                print '\r' + '.' * progress,
-                sys.stdout.flush()
-                response = process_json(conn.make_request_with_auth(command,
-                                                                    requests))
-                responsekeys = filter(lambda x: 'response' in x,
-                                      response.keys())
-                if len(responsekeys) < 1:
-                    continue
-                result = response[responsekeys[0]]
-                jobstatus = result['jobstatus']
-                if jobstatus == 2:
-                    jobresult = result["jobresult"]
-                    self.print_shell("\rAsync query failed for jobid",
-                                     jobId, "\nError", jobresult["errorcode"],
-                                     jobresult["errortext"])
-                    return
-                elif jobstatus == 1:
-                    print '\r',
-                    return response
-                time.sleep(pollperiod)
-                timeout = timeout - pollperiod
-                progress += 1
-                logger.debug("job: %s to timeout in %ds" % (jobId, timeout))
-            self.print_shell("Error:", "Async query timeout for jobid", jobId)
-
-        return response
+        apiname = args.partition(' ')[0]
+        verb, subject = splitverbsubject(apiname)
 
     def get_api_module(self, api_name, api_class_strs=[]):
         try:
