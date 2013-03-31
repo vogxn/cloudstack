@@ -25,19 +25,19 @@ class SecurityGroupIngress(CloudStackEntity.CloudStackEntity):
         self.__dict__.update(items)
 
 
-    def __init__(self, items):
-        self.__dict__.update(items)
-
-
     def authorize(self, apiclient, **kwargs):
         cmd = authorizeSecurityGroupIngress.authorizeSecurityGroupIngressCmd()
-        [setattr(cmd, key, value) for key,value in kwargs.items]
+        cmd.id = self.id
+        [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
         securitygroupingress = apiclient.authorizeSecurityGroupIngress(cmd)
+        return securitygroupingress
 
 
     def revoke(self, apiclient, id, **kwargs):
         cmd = revokeSecurityGroupIngress.revokeSecurityGroupIngressCmd()
+        cmd.id = self.id
         cmd.id = id
-        [setattr(cmd, key, value) for key,value in kwargs.items]
+        [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
         securitygroupingress = apiclient.revokeSecurityGroupIngress(cmd)
+        return securitygroupingress
 

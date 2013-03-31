@@ -15,21 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
-from marvin.cloudstackAPI import addNicToVirtualMachine
+from marvin.cloudstackAPI import createLBHealthCheckPolicy
+from marvin.cloudstackAPI import deleteLBHealthCheckPolicy
 
-class NicToVirtualMachine(CloudStackEntity.CloudStackEntity):
+class LBHealthCheckPolicy(CloudStackEntity.CloudStackEntity):
 
 
     def __init__(self, items):
         self.__dict__.update(items)
 
 
-    def add(self, apiclient, networkid, virtualmachineid, **kwargs):
-        cmd = addNicToVirtualMachine.addNicToVirtualMachineCmd()
-        cmd.id = self.id
-        cmd.networkid = networkid
-        cmd.virtualmachineid = virtualmachineid
+    @classmethod
+    def create(cls, apiclient, LBHealthCheckPolicyFactory, **kwargs):
+        cmd = createLBHealthCheckPolicy.createLBHealthCheckPolicyCmd()
+        [setattr(cmd, factoryKey, factoryValue) for factoryKey, factoryValue in LBHealthCheckPolicyFactory.__dict__.iteritems()]
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        nictovirtualmachine = apiclient.addNicToVirtualMachine(cmd)
-        return nictovirtualmachine
+        lbhealthcheckpolicy = apiclient.createLBHealthCheckPolicy(cmd)
+        return LBHealthCheckPolicy(lbhealthcheckpolicy.__dict__)
 
+
+    def delete(self, apiclient, id, **kwargs):
+        cmd = deleteLBHealthCheckPolicy.deleteLBHealthCheckPolicyCmd()
+        cmd.id = self.id
+        cmd.id = id
+        [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
+        lbhealthcheckpolicy = apiclient.deleteLBHealthCheckPolicy(cmd)
+        return lbhealthcheckpolicy

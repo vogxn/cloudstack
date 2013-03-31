@@ -15,21 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
-from marvin.cloudstackAPI import addNicToVirtualMachine
+from marvin.cloudstackAPI import assignToGlobalLoadBalancerRule
 
-class NicToVirtualMachine(CloudStackEntity.CloudStackEntity):
+class ToGlobalLoadBalancerRule(CloudStackEntity.CloudStackEntity):
 
 
     def __init__(self, items):
         self.__dict__.update(items)
 
 
-    def add(self, apiclient, networkid, virtualmachineid, **kwargs):
-        cmd = addNicToVirtualMachine.addNicToVirtualMachineCmd()
+    def assign(self, apiclient, loadbalancerrulelist, id, **kwargs):
+        cmd = assignToGlobalLoadBalancerRule.assignToGlobalLoadBalancerRuleCmd()
         cmd.id = self.id
-        cmd.networkid = networkid
-        cmd.virtualmachineid = virtualmachineid
+        cmd.id = id
+        cmd.loadbalancerrulelist = loadbalancerrulelist
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        nictovirtualmachine = apiclient.addNicToVirtualMachine(cmd)
-        return nictovirtualmachine
-
+        togloballoadbalancerrule = apiclient.assignToGlobalLoadBalancerRule(cmd)
+        return togloballoadbalancerrule

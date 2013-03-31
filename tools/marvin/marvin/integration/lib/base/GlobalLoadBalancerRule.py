@@ -15,50 +15,48 @@
 # specific language governing permissions and limitations
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
-from marvin.cloudstackAPI import addNetworkServiceProvider
-from marvin.cloudstackAPI import listNetworkServiceProviders
-from marvin.cloudstackAPI import updateNetworkServiceProvider
-from marvin.cloudstackAPI import deleteNetworkServiceProvider
+from marvin.cloudstackAPI import createGlobalLoadBalancerRule
+from marvin.cloudstackAPI import listGlobalLoadBalancerRules
+from marvin.cloudstackAPI import updateGlobalLoadBalancerRule
+from marvin.cloudstackAPI import deleteGlobalLoadBalancerRule
 
-class NetworkServiceProvider(CloudStackEntity.CloudStackEntity):
+class GlobalLoadBalancerRule(CloudStackEntity.CloudStackEntity):
 
 
     def __init__(self, items):
         self.__dict__.update(items)
 
 
-    def add(self, apiclient, physicalnetworkid, name, **kwargs):
-        cmd = addNetworkServiceProvider.addNetworkServiceProviderCmd()
-        cmd.id = self.id
-        cmd.name = name
-        cmd.physicalnetworkid = physicalnetworkid
+    @classmethod
+    def create(cls, apiclient, GlobalLoadBalancerRuleFactory, **kwargs):
+        cmd = createGlobalLoadBalancerRule.createGlobalLoadBalancerRuleCmd()
+        [setattr(cmd, factoryKey, factoryValue) for factoryKey, factoryValue in GlobalLoadBalancerRuleFactory.__dict__.iteritems()]
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        networkserviceprovider = apiclient.addNetworkServiceProvider(cmd)
-        return networkserviceprovider
+        globalloadbalancerrule = apiclient.createGlobalLoadBalancerRule(cmd)
+        return GlobalLoadBalancerRule(globalloadbalancerrule.__dict__)
 
 
     @classmethod
     def list(self, apiclient, **kwargs):
-        cmd = listNetworkServiceProviders.listNetworkServiceProvidersCmd()
+        cmd = listGlobalLoadBalancerRules.listGlobalLoadBalancerRulesCmd()
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        networkserviceprovider = apiclient.listNetworkServiceProviders(cmd)
-        return map(lambda e: NetworkServiceProvider(e.__dict__), networkserviceprovider)
+        globalloadbalancerrule = apiclient.listGlobalLoadBalancerRules(cmd)
+        return map(lambda e: GlobalLoadBalancerRule(e.__dict__), globalloadbalancerrule)
 
 
     def update(self, apiclient, id, **kwargs):
-        cmd = updateNetworkServiceProvider.updateNetworkServiceProviderCmd()
+        cmd = updateGlobalLoadBalancerRule.updateGlobalLoadBalancerRuleCmd()
         cmd.id = self.id
         cmd.id = id
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        networkserviceprovider = apiclient.updateNetworkServiceProvider(cmd)
-        return networkserviceprovider
+        globalloadbalancerrule = apiclient.updateGlobalLoadBalancerRule(cmd)
+        return globalloadbalancerrule
 
 
     def delete(self, apiclient, id, **kwargs):
-        cmd = deleteNetworkServiceProvider.deleteNetworkServiceProviderCmd()
+        cmd = deleteGlobalLoadBalancerRule.deleteGlobalLoadBalancerRuleCmd()
         cmd.id = self.id
         cmd.id = id
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        networkserviceprovider = apiclient.deleteNetworkServiceProvider(cmd)
-        return networkserviceprovider
-
+        globalloadbalancerrule = apiclient.deleteGlobalLoadBalancerRule(cmd)
+        return globalloadbalancerrule

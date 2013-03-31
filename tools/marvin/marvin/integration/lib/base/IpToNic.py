@@ -26,6 +26,9 @@ class IpToNic(CloudStackEntity.CloudStackEntity):
 
     def add(self, apiclient, nicid, **kwargs):
         cmd = addIpToNic.addIpToNicCmd()
+        cmd.id = self.id
         cmd.nicid = nicid
-        [setattr(cmd, key, value) for key,value in kwargs.items]
+        [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
         iptonic = apiclient.addIpToNic(cmd)
+        return iptonic
+

@@ -15,21 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
-from marvin.cloudstackAPI import addNicToVirtualMachine
+from marvin.cloudstackAPI import listStorageProviders
 
-class NicToVirtualMachine(CloudStackEntity.CloudStackEntity):
+class StorageProviders(CloudStackEntity.CloudStackEntity):
 
 
     def __init__(self, items):
         self.__dict__.update(items)
 
 
-    def add(self, apiclient, networkid, virtualmachineid, **kwargs):
-        cmd = addNicToVirtualMachine.addNicToVirtualMachineCmd()
-        cmd.id = self.id
-        cmd.networkid = networkid
-        cmd.virtualmachineid = virtualmachineid
+    @classmethod
+    def list(self, apiclient, type, **kwargs):
+        cmd = listStorageProviders.listStorageProvidersCmd()
+        cmd.type = type
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        nictovirtualmachine = apiclient.addNicToVirtualMachine(cmd)
-        return nictovirtualmachine
-
+        storageproviders = apiclient.listStorageProviders(cmd)
+        return map(lambda e: StorageProviders(e.__dict__), storageproviders)
