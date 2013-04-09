@@ -60,17 +60,17 @@ public class ComponentContext implements ApplicationContextAware {
     public static ApplicationContext getApplicationContext() {  
         return s_appContext;  
     }
-    
+
     public static void initComponentsLifeCycle() {
         AutowireCapableBeanFactory  beanFactory = s_appContext.getAutowireCapableBeanFactory();
 
-    	Map<String, ComponentMethodInterceptable> interceptableComponents = getApplicationContext().getBeansOfType(
-    		ComponentMethodInterceptable.class);
-    	for(Map.Entry<String, ComponentMethodInterceptable> entry : interceptableComponents.entrySet()) {
-    		Object bean = getTargetObject(entry.getValue());
-    		beanFactory.configureBean(bean, entry.getKey());
-    	}
-    	
+	Map<String, ComponentMethodInterceptable> interceptableComponents = getApplicationContext().getBeansOfType(
+		ComponentMethodInterceptable.class);
+	for(Map.Entry<String, ComponentMethodInterceptable> entry : interceptableComponents.entrySet()) {
+		Object bean = getTargetObject(entry.getValue());
+		beanFactory.configureBean(bean, entry.getKey());
+	}
+
     	Map<String, ComponentLifecycle> lifecyleComponents = getApplicationContext().getBeansOfType(ComponentLifecycle.class);
  
     	Map[] classifiedComponents = new Map[ComponentLifecycle.MAX_RUN_LEVELS];
@@ -87,10 +87,10 @@ public class ComponentContext implements ApplicationContextAware {
         for (Entry<String,SystemIntegrityChecker> entry : integrityCheckers.entrySet() ){
             s_logger.info ("Running SystemIntegrityChecker " + entry.getKey());
             try {
-            	entry.getValue().check();
+		entry.getValue().check();
             } catch(Throwable e) {
-            	s_logger.error("System integrity check failed. Refuse to startup");
-            	System.exit(1);
+		s_logger.error("System integrity check failed. Refuse to startup");
+		System.exit(1);
             }
         }
     	
@@ -115,11 +115,11 @@ public class ComponentContext implements ApplicationContextAware {
 				}
                 
                 avoidMap.put(implClassName, implClassName);
-    		}
-    	}
- 
-    	// starting phase
-    	avoidMap.clear();
+		}
+	}
+
+	// starting phase
+	avoidMap.clear();
     	for(int i = 0; i < ComponentLifecycle.MAX_RUN_LEVELS; i++) {
     		for(Map.Entry<String, ComponentLifecycle> entry : ((Map<String, ComponentLifecycle>)classifiedComponents[i]).entrySet()) {
     			ComponentLifecycle component = entry.getValue();

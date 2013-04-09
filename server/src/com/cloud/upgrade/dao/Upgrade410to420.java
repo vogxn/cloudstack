@@ -234,7 +234,7 @@ public class Upgrade410to420 implements DbUpgrade {
             }
         }
     }
-    
+
     private void createPlaceHolderNics(Connection conn) {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -255,7 +255,7 @@ public class Upgrade410to420 implements DbUpgrade {
                     pstmt.setLong(4, networkId);
                     pstmt.executeUpdate();
                     s_logger.debug("Created placeholder nic for the ipAddress " + ip);
-                
+
             }
         } catch (SQLException e) {
             throw new CloudRuntimeException("Unable to create placeholder nics", e);
@@ -271,8 +271,8 @@ public class Upgrade410to420 implements DbUpgrade {
             }
         }
     }
-    
-    
+
+
     private void updateRemoteAccessVpn(Connection conn) {
         PreparedStatement pstmt = null;
         ResultSet rs = null;

@@ -325,7 +325,7 @@
 
           if (args.data['network-model'] == 'Basic') {
             args.$form.find('[rel=networkOfferingId]').show();
-            args.$form.find('[rel=guestcidraddress]').hide();						
+            args.$form.find('[rel=guestcidraddress]').hide();
 						args.$form.find('[rel=ip6dns1]').hide();
 						args.$form.find('[rel=ip6dns2]').hide();
           }
@@ -336,10 +336,10 @@
               args.$form.find('[rel=guestcidraddress]').show();
 						else //args.data["zone-advanced-sg-enabled"] ==	"on
 						  args.$form.find('[rel=guestcidraddress]').hide();
-          					  
+
 						args.$form.find('[rel=ip6dns1]').show();
 						args.$form.find('[rel=ip6dns2]').show();
-					}													
+					}
 										
           setTimeout(function() {
             if ($form.find('input[name=ispublic]').is(':checked')) {
@@ -1189,7 +1189,7 @@
            scope: {
                     label: 'label.scope',
                     select: function(args) {
-                    
+
              var selectedHypervisorObj = {
                 hypervisortype: $.isArray(args.context.zones[0].hypervisor) ?
                   // We want the cluster's hypervisor type
@@ -1200,8 +1200,8 @@
                 return;
               }
 
-                // ZWPS is supported only for KVM as the hypervisor
-             if(selectedHypervisorObj.hypervisortype != "KVM"){
+                // ZWPS not supported for Xenserver
+             if(selectedHypervisorObj.hypervisortype == "XenServer"){
                        var scope=[];
                        scope.push({ id: 'cluster', description: _l('label.cluster') });
                        //scope.push({ id: 'host', description: _l('label.host') });

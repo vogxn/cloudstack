@@ -743,7 +743,7 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
 
         String secondaryMountPoint = _mountService.getMountPoint(secStorageUrl);
         String exportPath =  secondaryMountPoint + "/" + secStorageDir + "/" + exportName;
-        
+
         synchronized(exportPath.intern()) {
             if(!new File(exportPath).exists()) {
                 Script command = new Script(false, "mkdir", _timeout, s_logger);

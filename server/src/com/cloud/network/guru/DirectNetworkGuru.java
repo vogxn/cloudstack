@@ -220,7 +220,7 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
     protected void allocateDirectIp(NicProfile nic, Network network, VirtualMachineProfile<? extends VirtualMachine> vm, DataCenter dc, String requestedIp4Addr, String requestedIp6Addr)
             throws InsufficientVirtualNetworkCapcityException,
             InsufficientAddressCapacityException {
-        
+
         //FIXME - save ipv6 informaiton in the placeholder nic
         Transaction txn = Transaction.currentTxn();
         txn.start();
@@ -257,7 +257,7 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
             if (ip != null) {
                 Transaction txn = Transaction.currentTxn();
                 txn.start();
-                
+
                 // if the ip address a part of placeholder, don't release it
                 Nic placeholderNic = _networkModel.getPlaceholderNicForRouter(network, null);
                 if (placeholderNic != null && placeholderNic.getIp4Address().equalsIgnoreCase(ip.getAddress().addr())) {
@@ -266,7 +266,7 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
                     _networkMgr.markIpAsUnavailable(ip.getId());
                     _ipAddressDao.unassignIpAddress(ip.getId());
                 }
-               
+
                 //unassign nic secondary ip address
                 s_logger.debug("remove nic " + nic.getId() + " secondary ip ");
                 List<String> nicSecIps = null;
@@ -276,7 +276,7 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
                     _networkMgr.markIpAsUnavailable(pubIp.getId());
                     _ipAddressDao.unassignIpAddress(pubIp.getId());
                 }
-    
+
                 txn.commit();
             }
     	}
@@ -308,7 +308,7 @@ public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
                 _nicDao.remove(nic.getId());
             }
         }
-        
+
         txn.commit();
         return true;
     }

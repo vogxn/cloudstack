@@ -43,7 +43,7 @@
   -->
   <bean id="componentContext" class="com.cloud.utils.component.ComponentContext" />
   <bean id="transactionContextBuilder" class="com.cloud.utils.db.TransactionContextBuilder" />
- 
+
   <bean id="instantiatePostProcessor" class="com.cloud.utils.component.ComponentInstantiationPostProcessor">
     <property name="Interceptors">
         <list>
@@ -51,5 +51,5 @@
         </list>
     </property>
   </bean>
- 
+
 </beans>

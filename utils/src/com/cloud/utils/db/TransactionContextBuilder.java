@@ -23,16 +23,16 @@ import com.cloud.utils.component.ComponentMethodInterceptor;
 public class TransactionContextBuilder implements ComponentMethodInterceptor {
 	public TransactionContextBuilder() {
 	}
-	
+
 	@Override
 	public boolean needToIntercept(Method method) {
         DB db = method.getAnnotation(DB.class);
         if (db != null) {
             return true;
         }
-        
+
         Class<?> clazz = method.getDeclaringClass();
-        
+
         do {
             db = clazz.getAnnotation(DB.class);
             if (db != null) {
@@ -46,20 +46,20 @@ public class TransactionContextBuilder implements ComponentMethodInterceptor {
 
 	@Override
     public Object interceptStart(Method method, Object target) {
-    	return Transaction.open(method.getName());
+	return Transaction.open(method.getName());
     }
-    
+
 	@Override
     public void interceptComplete(Method method, Object target, Object objReturnedInInterceptStart) {
-    	Transaction txn = (Transaction)objReturnedInInterceptStart;
-    	if(txn != null)
-    		txn.close();
+	Transaction txn = (Transaction)objReturnedInInterceptStart;
+	if(txn != null)
+		txn.close();
     }
-    
+
 	@Override
     public void interceptException(Method method, Object target, Object objReturnedInInterceptStart) {
-    	Transaction txn = (Transaction)objReturnedInInterceptStart;
-    	if(txn != null)
-    		txn.close();
+	Transaction txn = (Transaction)objReturnedInInterceptStart;
+	if(txn != null)
+		txn.close();
     }
 }

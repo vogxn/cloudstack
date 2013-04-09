@@ -137,6 +137,7 @@ known_categories = {
     'addIpToNic': 'Nic',
     'removeIpFromNic': 'Nic',
     'listNics':'Nic',
+    'Simulator': 'Simulator',
     }
 
 

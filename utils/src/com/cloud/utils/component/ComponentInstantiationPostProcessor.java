@@ -41,7 +41,7 @@ public class ComponentInstantiationPostProcessor implements InstantiationAwareBe
     private List<ComponentMethodInterceptor> _interceptors = new ArrayList<ComponentMethodInterceptor>();
     private Callback[] _callbacks;
     private CallbackFilter _callbackFilter;
-    
+
 	public ComponentInstantiationPostProcessor() {
 		_callbacks = new Callback[2];
 		_callbacks[0] = NoOp.INSTANCE;
@@ -49,23 +49,23 @@ public class ComponentInstantiationPostProcessor implements InstantiationAwareBe
 
 		_callbackFilter = new InterceptorFilter();
 	}
-	
+
 	public List<ComponentMethodInterceptor> getInterceptors() {
 		return _interceptors;
 	}
-	
+
 	public void setInterceptors(List<ComponentMethodInterceptor> interceptors) {
 		_interceptors = interceptors;
 	}
-	
+
 	private Callback[] getCallbacks() {
 		return _callbacks;
 	}
-	
+
 	private CallbackFilter getCallbackFilter() {
 		return _callbackFilter;
 	}
-	
+
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
@@ -88,7 +88,7 @@ public class ComponentInstantiationPostProcessor implements InstantiationAwareBe
 		        enhancer.setCallbacks(getCallbacks());
 		        enhancer.setCallbackFilter(getCallbackFilter());
 		        enhancer.setNamingPolicy(ComponentNamingPolicy.INSTANCE);
-		        
+
 		        Object bean = enhancer.create();
 		        return bean;
 			}
@@ -108,12 +108,12 @@ public class ComponentInstantiationPostProcessor implements InstantiationAwareBe
 			throws BeansException {
 		return pvs;
 	}
-	
+
     protected class InterceptorDispatcher implements MethodInterceptor {
         @Override
         public Object intercept(Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
             ArrayList<Pair<ComponentMethodInterceptor, Object>> interceptors = new ArrayList<Pair<ComponentMethodInterceptor, Object>>();
-            
+
             for (ComponentMethodInterceptor interceptor : getInterceptors()) {
                 if (interceptor.needToIntercept(method)) {
                     Object objReturnedInInterceptStart = interceptor.interceptStart(method, target);
@@ -136,14 +136,14 @@ public class ComponentInstantiationPostProcessor implements InstantiationAwareBe
             }
         }
     }
-    
+
     protected class InterceptorFilter implements CallbackFilter {
         @Override
         public int accept(Method method) {
             for(ComponentMethodInterceptor interceptor : getInterceptors()) {
-            
+
                 if (interceptor.needToIntercept(method)) {
-                	return 1;
+			return 1;
                 }
             }
             return 0;

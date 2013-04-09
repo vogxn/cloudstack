@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -1349,18 +1349,18 @@ class LoadBalancerRule:
             for name, value in param.items():
                 cmd.param.append({'name': name, 'value': value})
         return apiclient.createLBStickinessPolicy(cmd)
-    
+
     def deleteSticky(self, apiclient, id):
         """Deletes stickyness policy"""
-        
+
         cmd = deleteLBStickinessPolicy.deleteLBStickinessPolicyCmd()
         cmd.id = id
         return apiclient.deleteLBStickinessPolicy(cmd)
-    
+
     @classmethod
     def listStickyPolicies(cls, apiclient, lbruleid, **kwargs):
         """Lists stickiness policies for load balancing rule"""
-        
+
         cmd= listLBStickinessPolicies.listLBStickinessPoliciesCmd()
         cmd.lbruleid = lbruleid
         [setattr(cmd, k, v) for k, v in kwargs.items()]

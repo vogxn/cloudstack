@@ -26,7 +26,7 @@ import net.sf.cglib.core.Predicate;
 public class ComponentNamingPolicy implements NamingPolicy {
 
 	public static final ComponentNamingPolicy INSTANCE = new ComponentNamingPolicy();
-    
+
     public String getClassName(String prefix, String source, Object key, Predicate names) {
         if (prefix == null) {
             prefix = "net.sf.cglib.empty.Object";
@@ -34,7 +34,7 @@ public class ComponentNamingPolicy implements NamingPolicy {
             prefix = "_" + prefix;
         }
         String base =
-            prefix + "_" + 
+            prefix + "_" +
             source.substring(source.lastIndexOf('.') + 1) +
             getTag() + "_" +
             Integer.toHexString(key.hashCode());
@@ -56,7 +56,7 @@ public class ComponentNamingPolicy implements NamingPolicy {
 	public int hashCode() {
 	    return getTag().hashCode();
 	}
-	
+
 	public boolean equals(Object o) {
 	    return (o instanceof ComponentNamingPolicy) && ((ComponentNamingPolicy) o).getTag().equals(getTag());
 	}

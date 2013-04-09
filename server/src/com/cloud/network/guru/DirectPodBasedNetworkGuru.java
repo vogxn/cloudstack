@@ -165,7 +165,7 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
         if (nic.getIp4Address() == null) {
             Transaction txn = Transaction.currentTxn();
             txn.start();
-            
+
             PublicIp ip = null;
             List<PodVlanMapVO> podRefs = _podVlanDao.listPodVlanMapsByPod(pod.getId());
             String podRangeGateway = null;
@@ -181,11 +181,11 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
                     s_logger.debug("Nic got an ip address " + placeholderNic.getIp4Address() + " stored in placeholder nic for the network " + network + " and gateway " + podRangeGateway);
                 }
             }
-            
+
             if (ip == null) {
                 ip = _networkMgr.assignPublicIpAddress(dc.getId(), pod.getId(), vm.getOwner(), VlanType.DirectAttached, network.getId(), null, false);
             }
-            
+
             nic.setIp4Address(ip.getAddress().toString());
             nic.setFormat(AddressFormat.Ip4);
             nic.setGateway(ip.getGateway());
@@ -197,7 +197,7 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
             }
             nic.setReservationId(String.valueOf(ip.getVlanTag()));
             nic.setMacAddress(ip.getMacAddress());
-            
+
             //save the placeholder nic if the vm is the Virtual router
             if (vm.getType() == VirtualMachine.Type.DomainRouter) {
                 Nic placeholderNic = _networkModel.getPlaceholderNicForRouter(network, pod.getId());

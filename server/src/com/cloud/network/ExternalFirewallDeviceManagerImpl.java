@@ -428,7 +428,7 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         IPAddressVO sourceNatIp = null;
         if (!sharedSourceNat) {
             // Get the source NAT IP address for this account          
-            List<? extends IpAddress> sourceNatIps = _networkModel.listPublicIpsAssignedToAccount(network.getAccountId(), 
+            List<? extends IpAddress> sourceNatIps = _networkModel.listPublicIpsAssignedToAccount(network.getAccountId(),
                     zoneId, true);
 
             if (sourceNatIps.size() != 1) {
