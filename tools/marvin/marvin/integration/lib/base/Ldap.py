@@ -15,21 +15,28 @@
 # specific language governing permissions and limitations
 # under the License.
 from marvin.integration.lib.base import CloudStackEntity
-from marvin.cloudstackAPI import addNicToVirtualMachine
+from marvin.cloudstackAPI import ldapRemove
+from marvin.cloudstackAPI import ldapConfig
 
-class NicToVirtualMachine(CloudStackEntity.CloudStackEntity):
+class Ldap(CloudStackEntity.CloudStackEntity):
 
 
     def __init__(self, items):
         self.__dict__.update(items)
 
 
-    def add(self, apiclient, networkid, virtualmachineid, **kwargs):
-        cmd = addNicToVirtualMachine.addNicToVirtualMachineCmd()
+    def config(self, apiclient, **kwargs):
+        cmd = ldapConfig.ldapConfigCmd()
         cmd.id = self.id
-        cmd.networkid = networkid
-        cmd.virtualmachineid = virtualmachineid
         [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
-        nictovirtualmachine = apiclient.addNicToVirtualMachine(cmd)
-        return nictovirtualmachine
+        config = apiclient.ldapConfig(cmd)
+        return config
+
+
+    def remove(self, apiclient, **kwargs):
+        cmd = ldapRemove.ldapRemoveCmd()
+        cmd.id = self.id
+        [setattr(cmd, key, value) for key,value in kwargs.iteritems()]
+        remove = apiclient.ldapRemove(cmd)
+        return remove
 
