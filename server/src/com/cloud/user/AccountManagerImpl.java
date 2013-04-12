@@ -42,6 +42,7 @@ import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
+import org.apache.cloudstack.affinity.dao.AffinityGroupDao;
 import org.apache.cloudstack.api.command.admin.account.UpdateAccountCmd;
 import org.apache.cloudstack.api.command.admin.user.DeleteUserCmd;
 import org.apache.cloudstack.api.command.admin.user.RegisterCmd;
@@ -220,6 +221,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Inject
     private AutoScaleManager _autoscaleMgr;
     @Inject VolumeManager volumeMgr;
+    @Inject
+    private AffinityGroupDao _affinityGroupDao;
 
     private List<UserAuthenticator> _userAuthenticators;
     List<UserAuthenticator> _userPasswordEncoders;
@@ -238,7 +241,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     public List<UserAuthenticator> getUserAuthenticators() {
     	return _userAuthenticators;
     }
-    
+
     public void setUserAuthenticators(List<UserAuthenticator> authenticators) {
     	_userAuthenticators = authenticators;
     }
@@ -622,6 +625,10 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             // Cleanup security groups
             int numRemoved = _securityGroupDao.removeByAccountId(accountId);
             s_logger.info("deleteAccount: Deleted " + numRemoved + " network groups for account " + accountId);
+
+            // Cleanup affinity groups
+            int numAGRemoved = _affinityGroupDao.removeByAccountId(accountId);
+            s_logger.info("deleteAccount: Deleted " + numAGRemoved + " affinity groups for account " + accountId);
 
             // Delete all the networks
             boolean networksDeleted = true;
@@ -2138,7 +2145,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     permittedAccounts, Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject,
             boolean listAll, boolean forProjectInvitation) {
         Long domainId = domainIdRecursiveListProject.first();
-
         if (domainId != null) {
             Domain domain = _domainDao.findById(domainId);
             if (domain == null) {
@@ -2154,10 +2160,13 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             }
 
             Account userAccount = null;
+            Domain domain = null;
             if (domainId != null) {
                 userAccount = _accountDao.findActiveAccount(accountName, domainId);
+                domain = _domainDao.findById(domainId);
             } else {
                 userAccount = _accountDao.findActiveAccount(accountName, caller.getDomainId());
+                domain = _domainDao.findById(caller.getDomainId());
             }
 
             if (userAccount != null) {
@@ -2165,7 +2174,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 //check permissions
                 permittedAccounts.add(userAccount.getId());
             } else {
-                throw new InvalidParameterValueException("could not find account " + accountName + " in domain " + domainId);
+                throw new InvalidParameterValueException("could not find account " + accountName + " in domain " + domain.getUuid());
             }
         }
 
