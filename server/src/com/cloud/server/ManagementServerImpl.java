@@ -430,22 +430,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 		this._hostAllocators = _hostAllocators;
 	}
 
-    public List<UserAuthenticator> getUserAuthenticators() {
-	return _userAuthenticators;
-    }
-
-    public void setUserAuthenticators(List<UserAuthenticator> authenticators) {
-	_userAuthenticators = authenticators;
-    }
-
-    public List<HostAllocator> getHostAllocators() {
-		return _hostAllocators;
-	}
-
-	public void setHostAllocators(List<HostAllocator> _hostAllocators) {
-		this._hostAllocators = _hostAllocators;
-	}
-
 	@Override
 	public boolean configure(String name, Map<String, Object> params)
 			throws ConfigurationException {
