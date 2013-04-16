@@ -16,10 +16,9 @@
 # under the License.
 
 import cloudstackException
-import json
+import simplejson as json
 import inspect
 from cloudstackAPI import *
-import pdb
 
 class jsonLoader:
     '''The recursive class for building and representing objects with.'''
@@ -89,35 +88,32 @@ def finalizeResultObj(result, responseName, responsecls):
             pass
     
     if responseName is not None and responseName == "queryasyncjobresultresponse" and responsecls is not None and result.jobresult is not None:
-        return finalizeResultObj(result.jobresult, None, responsecls)
+        result.jobresult = finalizeResultObj(result.jobresult, None, responsecls)
+        return result
     elif responsecls is not None:
         attr = result.__dict__.keys()[0]
         value = getattr(result, attr)
         if not isinstance(value, jsonLoader):
             return result
-        
-        findObj = False
+
+        mirrorObj = True
         for k,v in value.__dict__.iteritems():
-            if k in responsecls.__dict__:
-                findObj = True
+            if k not in responsecls.__dict__:
+                mirrorObj = False
                 break
-        if findObj:
+        if mirrorObj:
             return value
         else:
             return result
     else:
         return result
                     
-            
-        
-def getResultObj(returnObj, responsecls=None):
-    returnObj = json.loads(returnObj)
-    
-    if len(returnObj) == 0:
+def getResultObj(jsonResponse, responsecls=None):
+    objDict = json.loads(jsonResponse)
+    if len(objDict) == 0:
         return None
-    responseName = filter(lambda a: a!=u'cloudstack-version', returnObj.keys())[0]
-    
-    response = returnObj[responseName]
+    responseName = filter(lambda a: a!=u'cloudstack-version', objDict.keys())[0]
+    response = objDict[responseName]
     if len(response) == 0:
         return None
     
@@ -125,7 +121,7 @@ def getResultObj(returnObj, responsecls=None):
     if result.errorcode is not None:
         errMsg = "errorCode: %s, errorText:%s"%(result.errorcode, result.errortext)
         raise cloudstackException.cloudstackAPIException(responseName.replace("response", ""), errMsg)
-    
+
     if result.count is not None:
         for key in result.__dict__.iterkeys():
             if key == "count":
@@ -138,17 +134,8 @@ def getResultObj(returnObj, responsecls=None):
 if __name__ == "__main__":
 
     result = '{ "listnetworkserviceprovidersresponse" : { "count":1 ,"networkserviceprovider" : [ {"name":"VirtualRouter","physicalnetworkid":"ad2948fc-1054-46c7-b1c7-61d990b86710","destinationphysicalnetworkid":"0","state":"Disabled","id":"d827cae4-4998-4037-95a2-55b92b6318b1","servicelist":["Vpn","Dhcp","Dns","Gateway","Firewall","Lb","SourceNat","StaticNat","PortForwarding","UserData"]} ] } }'
-    nsp = getResultObj(result)
-    print nsp[0].id
-
-    result = '{ "listzonesresponse" : { "count":1 ,"zone" : [  {"id":1,"name":"test0","dns1":"8.8.8.8","dns2":"4.4.4.4","internaldns1":"192.168.110.254","internaldns2":"192.168.110.253","networktype":"Basic","securitygroupsenabled":true,"allocationstate":"Enabled","zonetoken":"5e818a11-6b00-3429-9a07-e27511d3169a","dhcpprovider":"DhcpServer"} ] } }'
-    zones = getResultObj(result)
-    print zones[0].id
-    res = authorizeSecurityGroupIngress.authorizeSecurityGroupIngressResponse()
-    result = '{ "queryasyncjobresultresponse" : {"jobid":10,"jobstatus":1,"jobprocstatus":0,"jobresultcode":0,"jobresulttype":"object","jobresult":{"securitygroup":{"id":1,"name":"default","description":"Default Security Group","account":"admin","domainid":1,"domain":"ROOT","ingressrule":[{"ruleid":1,"protocol":"tcp","startport":22,"endport":22,"securitygroupname":"default","account":"a"},{"ruleid":2,"protocol":"tcp","startport":22,"endport":22,"securitygroupname":"default","account":"b"}]}}} }'
-    asynJob = getResultObj(result, res)
-    print asynJob.jobid, repr(asynJob.jobresult)
-    print asynJob.jobresult.ingressrule[0].account
+    nsp = getResultObj(result, listNetworkServiceProviders.listNetworkServiceProvidersResponse)
+    print nsp
 
     result = '{ "queryasyncjobresultresponse" : {"errorcode" : 431, "errortext" : "Unable to execute API command queryasyncjobresultresponse due to missing parameter jobid"}  }'
     try:
@@ -164,13 +151,13 @@ if __name__ == "__main__":
     asynJob = getResultObj(result)
     print asynJob
 
-    result = '{ "createzoneresponse" :  { "zone" : {"id":1,"name":"test0","dns1":"8.8.8.8","dns2":"4.4.4.4","internaldns1":"192.168.110.254","internaldns2":"192.168.110.253","networktype":"Basic","securitygroupsenabled":true,"allocationstate":"Enabled","zonetoken":"3442f287-e932-3111-960b-514d1f9c4610","dhcpprovider":"DhcpServer"} }  }'
+    result = '{ "createzoneresponse" :  { "zone" : {"id":"88e796cd-953a-44b9-9445-a7c3ee205cc2","name":"Sandbox-simul","dns1":"10.147.28.6","internaldns1":"10.147.28.6","guestcidraddress":"10.1.1.0/24","networktype":"Advanced","securitygroupsenabled":false,"allocationstate":"Disabled","zonetoken":"ad051d80-17d3-35bf-bc44-77e500132a45","dhcpprovider":"VirtualRouter","localstorageenabled":false} }  }'
     res = createZone.createZoneResponse()
     zone = getResultObj(result, res)
     print zone.id
 
-    result = '{ "attachvolumeresponse" : {"jobid":24} }'
-    res = attachVolume.attachVolumeResponse()
+    result = '{ "queryasyncjobresultresponse" : {"accountid":"4a8c3cd0-a696-11e2-b7a5-1aab0c3b0463","userid":"4a8c671e-a696-11e2-b7a5-1aab0c3b0463","cmd":"org.apache.cloudstack.api.command.admin.network.CreatePhysicalNetworkCmd","jobstatus":1,"jobprocstatus":0,"jobresultcode":0,"jobresulttype":"object","jobresult":{"physicalnetwork":{"id":"e0bc9017-9ba8-4551-a6f9-6b3b2ac1d59c","name":"Sandbox-pnet","broadcastdomainrange":"ZONE","zoneid":"88e796cd-953a-44b9-9445-a7c3ee205cc2","state":"Disabled"}},"created":"2013-04-16T18:37:01+0530","jobid":"8fc09350-f42a-4e04-9427-3d1b68f73dd0"} }'
+    res = createPhysicalNetwork.createPhysicalNetworkResponse()
     res = getResultObj(result, res)
     print res
 

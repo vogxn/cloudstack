@@ -118,12 +118,14 @@ class cloudConnection(object):
         timeout = self.asyncTimeout
         
         while timeout > 0:
-            asyncResonse = self.make_request(cmd, response, True)
-            
-            if asyncResonse.jobstatus == 2:
-                raise cloudstackException.cloudstackAPIException("asyncquery", asyncResonse.jobresult)
-            elif asyncResonse.jobstatus == 1:
-                return asyncResonse
+            asyncResponse = self.make_request(cmd, response, True)
+            if not hasattr(asyncResponse, "jobstatus"):
+                return asyncResponse
+
+            if asyncResponse.jobstatus == 2:
+                raise cloudstackException.cloudstackAPIException("asyncquery", asyncResponse.jobresult)
+            elif asyncResponse.jobstatus == 1:
+                return asyncResponse
             
             time.sleep(5)
             if self.logging is not None:
@@ -182,10 +184,10 @@ class cloudConnection(object):
         if raw or isAsync == "false":
             return result
         else:
-            asynJobId = result.jobid
-            result = self.pollAsyncJob(asynJobId, response)
+            asyncJobId = result.jobid
+            result = self.pollAsyncJob(asyncJobId, response)
             return result.jobresult
-        
+
 if __name__ == '__main__':
     xml = '<?xml version="1.0" encoding="ISO-8859-1"?><deployVirtualMachineResponse><virtualmachine><id>407</id><name>i-1-407-RS3</name><displayname>i-1-407-RS3</displayname><account>system</account><domainid>1</domainid><domain>ROOT</domain><created>2011-07-30T14:45:19-0700</created><state>Running</state><haenable>false</haenable><zoneid>1</zoneid><zonename>CA1</zonename><hostid>3</hostid><hostname>kvm-50-205</hostname><templateid>4</templateid><templatename>CentOS 5.5(64-bit) no GUI (KVM)</templatename><templatedisplaytext>CentOS 5.5(64-bit) no GUI (KVM)</templatedisplaytext><passwordenabled>false</passwordenabled><serviceofferingid>1</serviceofferingid><serviceofferingname>Small Instance</serviceofferingname><cpunumber>1</cpunumber><cpuspeed>500</cpuspeed><memory>512</memory><guestosid>112</guestosid><rootdeviceid>0</rootdeviceid><rootdevicetype>NetworkFilesystem</rootdevicetype><nic><id>380</id><networkid>203</networkid><netmask>255.255.255.0</netmask><gateway>65.19.181.1</gateway><ipaddress>65.19.181.110</ipaddress><isolationuri>vlan://65</isolationuri><broadcasturi>vlan://65</broadcasturi><traffictype>Guest</traffictype><type>Direct</type><isdefault>true</isdefault><macaddress>06:52:da:00:00:08</macaddress></nic><hypervisor>KVM</hypervisor></virtualmachine></deployVirtualMachineResponse>'
     conn = cloudConnection(None)
