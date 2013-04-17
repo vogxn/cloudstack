@@ -107,13 +107,12 @@ def finalizeResultObj(result, responseName, responsecls):
             return result
     else:
         return result
-                    
-def getResultObj(jsonResponse, responsecls=None):
-    objDict = json.loads(jsonResponse)
-    if len(objDict) == 0:
+
+def getResultObj(returnObj, responsecls=None):
+    if len(returnObj) == 0:
         return None
-    responseName = filter(lambda a: a!=u'cloudstack-version', objDict.keys())[0]
-    response = objDict[responseName]
+    responseName = filter(lambda a: a!=u'cloudstack-version', returnObj.keys())[0]
+    response = returnObj[responseName]
     if len(response) == 0:
         return None
     

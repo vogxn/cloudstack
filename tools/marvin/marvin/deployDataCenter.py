@@ -408,7 +408,6 @@ class deployDataCenters():
                                             logging=self.testClientLogger)
         if mgt.apiKey is None:
             apiKey, securityKey = self.registerApiKey()
-            self.testClient.close()
             self.testClient = \
             cloudstackTestClient.cloudstackTestClient(mgt.mgtSvrIp, 8080, \
                                                       apiKey, securityKey, \
