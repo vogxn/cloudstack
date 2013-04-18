@@ -138,7 +138,7 @@ def fetch_api_client(config_file='datacenterCfg'):
     testClientLogger = logging.getLogger("testClient")
     asyncTimeout = 3600
     return cloudstackAPIClient.CloudStackAPIClient(
-            marvin.cloudstackConnection.cloudConnection(
+            marvin.cloudstackConnection.CloudConnection(
                                                 mgt.mgtSvrIp,
                                                 mgt.port,
                                                 mgt.apiKey,

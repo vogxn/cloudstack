@@ -21,16 +21,16 @@ import base64
 import hmac
 import hashlib
 import time
-import cloudstackException
-from cloudstackAPI import *
-import jsonHelper
+import marvin.cloudstackException
+from marvin.cloudstackAPI import *
+import marvin.jsonHelper
 from requests import ConnectionError
 from requests import HTTPError
 from requests import Timeout
 from requests import RequestException
 
 
-class cloudConnection(object):
+class CloudConnection(object):
     """ Connections to make API calls to the cloudstack management server
     """
     def __init__(self, mgtSvr, port=8096, apiKey=None, securityKey=None,
@@ -49,13 +49,13 @@ class cloudConnection(object):
            (self.apiKey is None and self.securityKey is None):
             self.auth = False
         if scheme not in ['http', 'https']:
-                raise RequestException("Protocol must be HTTP")
+            raise RequestException("Protocol must be HTTP")
         self.protocol = scheme
         self.baseurl = "%s://%s:%d/%s"\
                        % (self.protocol, self.mgtSvr, self.port, self.path)
 
     def __copy__(self):
-        return cloudConnection(self.mgtSvr, self.port, self.apiKey,
+        return CloudConnection(self.mgtSvr, self.port, self.apiKey,
                                self.securityKey, self.asyncTimeout,
                                self.logging, self.protocol, self.path)
 
