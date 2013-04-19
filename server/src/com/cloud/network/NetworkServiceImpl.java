@@ -1874,11 +1874,13 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
 
             // If networkCidr is null it implies that there was no prior IP reservation, so the network cidr is network.getCidr()
             // But in case networkCidr is a non null value (IP reservation already exists), it implies network cidr is networkCidr
-            if (networkCidr != null && ! NetUtils.isNetworkAWithinNetworkB(guestVmCidr, networkCidr)) {
+            if (networkCidr != null) {
+                if(! NetUtils.isNetworkAWithinNetworkB(guestVmCidr, networkCidr)) {
                     throw new InvalidParameterValueException ("Invalid value of Guest VM CIDR. For IP Reservation, Guest VM CIDR  should be a subset of network CIDR : " + networkCidr);
+                }
             } else {
                 if (! NetUtils.isNetworkAWithinNetworkB(guestVmCidr, network.getCidr())) {
-                     throw new InvalidParameterValueException ("Invalid value of Guest VM CIDR. For IP Reservation, Guest VM CIDR  should be a subset of network CIDR :  " + network.getCidr());
+                    throw new InvalidParameterValueException ("Invalid value of Guest VM CIDR. For IP Reservation, Guest VM CIDR  should be a subset of network CIDR :  " + network.getCidr());
                 }
             }
 
@@ -2451,16 +2453,14 @@ public class NetworkServiceImpl extends ManagerBase implements  NetworkService {
                 network.setVnet(vnetString);
             }
 
-
-
-            _physicalNetworkDao.update(id, network);
-
             for (Pair<Integer, Integer> vnetToAdd : vnetsToAdd) {
                 s_logger.debug("Adding vnet range " + vnetToAdd.first() + "-" + vnetToAdd.second() + " for the physicalNetwork id= " + id + " and zone id=" + network.getDataCenterId()
                     + " as a part of updatePhysicalNetwork call");
                 _dcDao.addVnet(network.getDataCenterId(), network.getId(), vnetToAdd.first(), vnetToAdd.second());
             }
         }
+
+        _physicalNetworkDao.update(id, network);
 
         return network;
     }
