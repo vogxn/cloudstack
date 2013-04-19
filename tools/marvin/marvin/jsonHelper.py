@@ -102,7 +102,8 @@ def finalizeResultObj(result, responseName, responsecls):
                 mirrorObj = False
                 break
         if mirrorObj:
-            return value
+            responsecls.__dict__.update(value.__dict__)
+            return responsecls
         else:
             return result
     else:

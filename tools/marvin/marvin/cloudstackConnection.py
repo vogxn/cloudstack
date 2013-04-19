@@ -21,9 +21,9 @@ import base64
 import hmac
 import hashlib
 import time
-import marvin.cloudstackException
+from marvin import cloudstackException
 from marvin.cloudstackAPI import *
-import marvin.jsonHelper
+from marvin import jsonHelper
 from requests import ConnectionError
 from requests import HTTPError
 from requests import Timeout
@@ -137,7 +137,7 @@ class CloudConnection(object):
             else:
                 response = requests.get(self.baseurl, params=payload)
         except ConnectionError, c:
-            self.logging.debug("Connection refused. Reason: %s" %
+            self.logging.debug("Connection refused. Reason: %s %s" %
                                (self.baseurl, c))
             raise c
         except HTTPError, h:
