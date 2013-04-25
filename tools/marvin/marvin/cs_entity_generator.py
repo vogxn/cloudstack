@@ -15,20 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import marvin
 from marvin.cloudstackAPI import *
 import os
+import inflect
 
-# Add verbs in grammar - same as cloudmonkey
+# Grammar for CloudStack APIs
 grammar = ['create', 'list', 'delete', 'update',
            'enable', 'activate', 'disable', 'add', 'remove',
-           'attach', 'detach', 'associate', 'generate', 'ldap',
-           'assign', 'authorize', 'change', 'register', 'configure',
+           'attach', 'detach', 'associate', 'generate', 'assign',
+           'authorize', 'change', 'register', 'configure',
            'start', 'restart', 'reboot', 'stop', 'reconnect',
            'cancel', 'destroy', 'revoke', 'mark', 'reset',
            'copy', 'extract', 'migrate', 'restore', 'suspend',
            'get', 'query', 'prepare', 'deploy', 'upload', 'lock',
-           'disassociate', 'scale']
+           'disassociate', 'scale', 'dedicate', 'archive', 'find',
+           'recover', 'release', 'resize', 'revert']
 
 LICENSE = """# Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -48,105 +49,155 @@ LICENSE = """# Licensed to the Apache Software Foundation (ASF) under one
 # under the License.
 """
 
-
 def get_api_cmds():
+    """@return: instances of all the API commands exposed by CloudStack
+    """
     api_classes = __import__('marvin.cloudstackAPI')
-
     cmdlist = map(
-                    lambda f: getattr(api_classes.cloudstackAPI, f),
-                    filter(
-                        lambda t: t.startswith('__') == False,
-                        dir(api_classes.cloudstackAPI)
-                    )
+        lambda f: getattr(api_classes.cloudstackAPI, f),
+        filter(
+            lambda t: t.startswith('__') == False,
+            dir(api_classes.cloudstackAPI)
+        )
     )
-
     cmdlist = filter(
-                lambda g: g is not None,
-                cmdlist
+        lambda g: g is not None,
+        cmdlist
     )
-
     clslist = map(
-                lambda g: getattr(g, g.__name__.split('.')[-1] + 'Cmd'),
-                filter(
-                    lambda h: h.__name__.split('.')[-1] not in ['baseCmd', 'baseResponse', 'cloudstackAPIClient'],
-                    cmdlist
-                )
+        lambda g: getattr(g, g.__name__.split('.')[-1] + 'Cmd'),
+        filter(
+            lambda h: h.__name__.split('.')[-1] not in ['baseCmd', 'baseResponse', 'cloudstackAPIClient'],
+            cmdlist
+        )
     )
-
     cmdlets = map(lambda t: t(), clslist)
     return cmdlets
 
-def get_entity_from_api(api):
-    matching_verbs = filter(lambda v: api.__class__.__name__.startswith(v), grammar)
+
+def singularize(word, num=0):
+    """Use the inflect engine to make singular nouns of the entities
+    @return: singular of `word`
+    """
+    inflector = inflect.engine()
+    return inflector.singular_noun(word, num)
+
+
+def transform_entity(entity):
+    if entity == 'DefaultZoneForAccount':
+        #markDefaultZoneForAccount -> Zone
+        return 'Zone'
+    elif entity in ['ToGlobalLoadBalancerRule', 'FromGlobalLoadBalancerRule']:
+        return 'GlobalLoadBalancerRule'
+    elif entity in ['AccountToProject', 'AccountFromProject']:
+        return 'Project'
+    elif entity in ['ToSnapshot']:
+        return 'Snapshot'
+    return entity
+
+
+def skip_list():
+    """Entities and APIs that we will not auto-generate
+    """
+    return ['ldapConfigCmd', 'ldapRemoveCmd']
+
+
+def get_verb_and_entity(api):
+    """Break down the API cmd instance in to `verb` and `Entity`
+    @return: verb, Entity tuple
+    """
+    matching_verbs = filter(lambda v: api.startswith(v), grammar)
     if len(matching_verbs) > 0:
         verb = matching_verbs[0]
-        entity = api.__class__.__name__.replace(verb, '').replace('Cmd', '')
-        return entity
+        entity = api.replace(verb, '').replace('Cmd', '')
+        entity = transform_entity(entity)
+        return verb, singularize(entity)
+    else:
+        print "No matching verb, entity breakdown for api %s" % api
+
 
 def get_actionable_entities():
-    cmdlets = sorted(get_api_cmds(), key=lambda k: get_entity_from_api(k))
+    """
+    Inspect all entities and return a map of the Entity against the actions
+    along with the required arguments to satisfy the action
+    @return: Dictionary of Entity { "verb" : [required] }
+    """
+    cmdlets = sorted(get_api_cmds(), key=lambda k: get_verb_and_entity(k.__class__.__name__))
     entities = {}
     for cmd in cmdlets:
         requireds = getattr(cmd, 'required')
         optionals = filter(lambda x: '__' not in x and 'required' not in x and 'isAsync' not in x, dir(cmd))
-        matching_verbs = filter(lambda v: cmd.__class__.__name__.startswith(v), grammar)
-        if len(matching_verbs)> 0:
-            verb = matching_verbs[0]
-            entity = cmd.__class__.__name__.replace(verb, '').replace('Cmd', '')
-            if entity[:-1] in entities:
-                # Accounts and Account are the same entity
-                entity = entity[:-1]
-            if entity[:-2] in entities:
-                # IpAddresses and IpAddress are the same entity
-                entity = entity[:-2]
-            if entity not in entities:
-                entities[entity] = { }
-            entities[entity][verb] = {}
-            entities[entity][verb]['args'] = requireds
-            entities[entity][verb]['apimodule'] = cmd.__class__.__module__.split('.')[-1]
-            entities[entity][verb]['apicmd'] = cmd.__class__.__name__
+        api = cmd.__class__.__name__
+        if api in skip_list():
+            continue
+        verb, entity = get_verb_and_entity(api)
+        if entity not in entities:
+            entities[entity] = {}
+        entities[entity][verb] = {}
+        entities[entity][verb]['args'] = requireds
+        entities[entity][verb]['apimodule'] = cmd.__class__.__module__.split('.')[-1]
+        entities[entity][verb]['apicmd'] = api
     return entities
 
-def write_entity_classes(entities):
+
+def write_entity_classes(entities, module=None):
+    """
+    Writes the collected entity classes into `path`
+    @param entities: dictionary of entities and the verbs acting on them
+    @param module: top level module to the generated classes
+    @return:
+    """
     tabspace = '    '
     entitydict = {}
-    #TODO: Add license header for ASLv2
     for entity, actions in entities.iteritems():
         body = []
         imports = []
-        imports.append('from marvin.integration.lib.base import CloudStackEntity')
-        body.append('class %s(CloudStackEntity.CloudStackEntity):'%entity)
-        body.append('\n')
+        imports.append('from %s.CloudStackEntity import CloudStackEntity' % module)
+        body.append('class %s(CloudStackEntity):' % entity)
+        #TODO: Add docs for entity
+        body.append('\n\n')
         body.append(tabspace + 'def __init__(self, items):')
-        body.append(tabspace*2 + 'self.__dict__.update(items)')
+        body.append(tabspace * 2 + 'self.__dict__.update(items)')
         body.append('\n')
         for action, details in actions.iteritems():
-            imports.append('from marvin.cloudstackAPI import %s'%details['apimodule'])
+            imports.append('from marvin.cloudstackAPI import %s' % details['apimodule'])
             if action in ['create', 'list', 'deploy']:
                 body.append(tabspace + '@classmethod')
-            if action in ['create', 'deploy']:
-                body.append(tabspace + 'def %s(cls, apiclient, %sFactory, **kwargs):'%(action, entity))
-                body.append(tabspace*2 + 'cmd = %(module)s.%(command)s()'%{"module": details["apimodule"], "command": details["apicmd"]})
-                body.append(tabspace*2 + '[setattr(cmd, factoryKey, factoryValue) for factoryKey, factoryValue in %sFactory.__dict__.iteritems()]'%entity)
-                body.append(tabspace*2 + '[setattr(cmd, key, value) for key,value in kwargs.iteritems()]')
-                body.append(tabspace*2 + '%s = apiclient.%s(cmd)'%(entity.lower(), details['apimodule']))
-                body.append(tabspace*2 + 'return %s(%s.__dict__)'%(entity, entity.lower()))
-            else:
+            if action not in ['create', 'deploy']:
                 if len(details['args']) > 0:
-                    body.append(tabspace + 'def %s(self, apiclient, %s, **kwargs):'%(action, ', '.join(list(set(details['args'])))))
+                    body.append(tabspace + 'def %s(self, apiclient, %s, **kwargs):' % (
+                    action, ', '.join(list(set(details['args'])))))
                 else:
-                    body.append(tabspace + 'def %s(self, apiclient, **kwargs):'%(action))
-                body.append(tabspace*2 + 'cmd = %(module)s.%(command)s()'%{"module": details["apimodule"], "command": details["apicmd"]})
+                    body.append(tabspace + 'def %s(self, apiclient, **kwargs):' % (action))
+                body.append(tabspace * 2 + 'cmd = %(module)s.%(command)s()' % {"module": details["apimodule"],
+                                                                               "command": details["apicmd"]})
                 if action not in ['create', 'list', 'deploy']:
-                    body.append(tabspace*2 + 'cmd.id = self.id')
+                    body.append(tabspace * 2 + 'cmd.id = self.id')
                 for arg in details['args']:
-                    body.append(tabspace*2 + 'cmd.%s = %s'%(arg, arg))
-                body.append(tabspace*2 + '[setattr(cmd, key, value) for key,value in kwargs.iteritems()]')
-                body.append(tabspace*2 + '%s = apiclient.%s(cmd)'%(entity.lower(), details['apimodule']))
+                    body.append(tabspace * 2 + 'cmd.%s = %s' % (arg, arg))
+                body.append(tabspace * 2 + '[setattr(cmd, key, value) for key,value in kwargs.iteritems()]')
+                body.append(tabspace * 2 + '%s = apiclient.%s(cmd)' % (entity.lower(), details['apimodule']))
                 if action in ['list']:
-                    body.append(tabspace*2 + 'return map(lambda e: %s(e.__dict__), %s)'%(entity, entity.lower()))
+                    body.append(
+                        tabspace * 2 + 'return map(lambda e: %s(e.__dict__), %s) if %s and len(%s) > 0 else None' % (
+                        entity, entity.lower(), entity.lower(), entity.lower()))
                 else:
-                    body.append(tabspace*2 + 'return %s'%(entity.lower()))
+                    body.append(tabspace * 2 + 'return %s if %s else None' % (entity.lower(), entity.lower()))
+            else:
+                body.append(tabspace + 'def %s(cls, apiclient, %s, factory=None, **kwargs):' % (
+                    action, ', '.join(map(lambda arg: arg + '=None', list(set(details['args'])))), entity))
+                #TODO: Add docs for actions
+                body.append(tabspace * 2 + 'cmd = %(module)s.%(command)s()' % {"module": details["apimodule"],
+                                                                               "command": details["apicmd"]})
+                body.append(tabspace * 2 + 'if factory:')
+                body.append(
+                    tabspace * 3 + '[setattr(cmd, factoryKey, factoryValue) for factoryKey, factoryValue in %sFactory.__dict__.iteritems()]' % entity)
+                body.append(tabspace * 2 + 'else:')
+                for arg in details["args"]:
+                    body.append(tabspace * 3 + "cmd.%s = %s" % (arg, arg))
+                body.append(tabspace * 2 + '[setattr(cmd, key, value) for key, value in kwargs.iteritems()]')
+                body.append(tabspace * 2 + '%s = apiclient.%s(cmd)' % (entity.lower(), details['apimodule']))
+                body.append(tabspace * 2 + 'return %s(%s.__dict__) if %s else None' % (entity, entity.lower(), entity.lower()))
             body.append('\n')
 
         imports = '\n'.join(imports)
@@ -154,15 +205,15 @@ def write_entity_classes(entities):
         code = imports + '\n\n' + body
 
         entitydict[entity] = code
-        #write_entity_factory(entity, actions)
-        with open("./base/%s.py"%entity, "w") as writer:
+        #write_entity_factory(entity, actions, path)
+        module_path = '/'.join(module.split('.'))[1:]
+        with open(".%s/%s.py" % (module_path, entity), "w") as writer:
             writer.write(LICENSE)
             writer.write(code)
 
 
 def write_entity_factory(entity, actions):
     tabspace = '    '
-    #TODO: Add license header for ASLv2
     code = ''
     factory_defaults = []
     if 'create' in actions:
@@ -176,27 +227,27 @@ def write_entity_factory(entity, actions):
     else:
         return
 
-    if os.path.exists("./factory/%sFactory.py"%entity):
+    if os.path.exists("./factory/%sFactory.py" % entity):
         for arg in factory_defaults:
-            code += tabspace + '%s = None\n'%arg
-        with open("./factory/%sFactory.py"%entity, "r") as reader:
+            code += tabspace + '%s = None\n' % arg
+        with open("./factory/%sFactory.py" % entity, "r") as reader:
             rcode = reader.read()
             if rcode.find(code) > 0:
                 return
-        with open("./factory/%sFactory.py"%entity, "a") as writer:
+        with open("./factory/%sFactory.py" % entity, "a") as writer:
             writer.write(code)
     else:
         code += 'import factory\n'
-        code += 'from marvin.integration.lib.base import %s\n'%entity
-        code += 'class %sFactory(factory.Factory):'%entity
+        code += 'from marvin.integration.lib.base import %s\n' % entity
+        code += 'class %sFactory(factory.Factory):' % entity
         code += '\n\n'
-        code += tabspace + 'FACTORY_FOR = %s.%s\n\n'%(entity,entity)
+        code += tabspace + 'FACTORY_FOR = %s.%s\n\n' % (entity, entity)
         for arg in factory_defaults:
-            code += tabspace + '%s = None\n'%arg
-        with open("./factory/%sFactory.py"%entity, "w") as writer:
+            code += tabspace + '%s = None\n' % arg
+        with open("./factory/%sFactory.py" % entity, "w") as writer:
             writer.write(LICENSE)
             writer.write(code)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     entities = get_actionable_entities()
-    write_entity_classes(entities)
+    write_entity_classes(entities, 'base2')
