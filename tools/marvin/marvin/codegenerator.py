@@ -338,7 +338,7 @@ class codeGenerator:
                 assert paramProperty.name
 
                 if param.has_key('required'):
-                    paramProperty.required = param['required']
+                    paramProperty.required = str(param['required']).lower()
 
                 if param.has_key('description'):
                     paramProperty.desc = param['description']
