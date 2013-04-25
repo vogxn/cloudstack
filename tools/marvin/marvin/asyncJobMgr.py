@@ -93,7 +93,7 @@ class workThread(threading.Thread):
                     jobstatus.jobId = jobId
                     try:
                         responseName = cmd.__class__.__name__.replace("Cmd", "Response")
-                        jobstatus.responsecls = jsonHelper.getclassFromName(cmd, responseName)
+                        jobstatus.responsecls = jsonHelper.getClass(cmd, responseName)
                     except:
                         pass
                     jobstatus.status = True
