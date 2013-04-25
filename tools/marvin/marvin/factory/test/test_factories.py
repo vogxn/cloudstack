@@ -43,7 +43,7 @@ class BuildVsCreateStrategyTest(unittest.TestCase):
 
     def test_buildUserAccountFactory(self):
         af = UserAccountFactory()
-        self.assert_(af.name is not None, msg="Acount factory didn't initialize")
+        self.assert_(af.account is not None, msg="Acount factory didn't initialize")
 
     def test_createAccountFactory(self):
         af = AccountFactory.create(apiclient=self.apiClient)

@@ -147,7 +147,7 @@ class UserFactorySubFactoryTest(unittest.TestCase):
 
     def test_userSubFactory(self):
         uf = UserFactory.create(apiclient=self.apiClient)
-        user = User.list(apiclient=self.apiClient, username=uf.username)
+        user = User.list(apiclient=self.apiClient, username=uf.account.username)
         self.assert_(uf.username == user[0].username, msg="Usernames don't match")
 
 
