@@ -79,10 +79,6 @@ class cloudstackTestClient(object):
             domain = self.apiClient.createDomain(cdomain)
             domId = domain.id
 
-        mdf = hashlib.md5()
-        mdf.update("password")
-        mdf_pass = mdf.hexdigest()
-
         cmd = listAccounts.listAccountsCmd()
         cmd.name = UserName
         cmd.domainid = domId
@@ -96,7 +92,7 @@ class cloudstackTestClient(object):
             createAcctCmd.email = "test-" + self.random_gen() + "@cloudstack.org"
             createAcctCmd.firstname = UserName
             createAcctCmd.lastname = UserName
-            createAcctCmd.password = mdf_pass
+            createAcctCmd.password = 'password'
             createAcctCmd.username = UserName
             acct = self.apiClient.createAccount(createAcctCmd)
             acctId = acct.id
