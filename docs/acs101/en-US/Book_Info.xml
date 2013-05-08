@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "ACS101.ent">
+%BOOK_ENTITIES;
+]>
+
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+   http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+
+
+<bookinfo id="book-ACS101-ACS101">
+    <title>ACS101</title>
+    <subtitle>Introduction to Apache CloudStack as a foundation for Cloud Computing environments.</subtitle>
+    <productname>Apache CloudStack</productname>
+    <productnumber>4.1.0</productnumber>
+    <edition>0</edition>
+    <pubsnumber>0</pubsnumber>
+    <abstract>
+        <para>
+              This book is aimed to be an introduction to Cloud Computing using Apache CloudStack as the foundation.
+              It covers general Cloud Computing information, &PRODUCT; specific installation, configuration and tuning information
+              as well as small recipes to build around &PRODUCT; deploy Big Data solutions, use of tools and other software that help
+              people build a complete Cloud environment.
+        </para>
+    </abstract>
+    <corpauthor>
+        <inlinemediaobject>
+            <imageobject>
+                <imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+            </imageobject>
+        </inlinemediaobject>
+    </corpauthor>
+    <xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</bookinfo>
+
