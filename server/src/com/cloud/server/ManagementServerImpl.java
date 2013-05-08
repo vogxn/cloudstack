@@ -95,6 +95,8 @@ import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
+import com.cloud.agent.api.storage.CreateVolumeOVAAnswer;
+import com.cloud.agent.api.storage.CreateVolumeOVACommand;
 import com.cloud.agent.manager.allocator.HostAllocator;
 import com.cloud.alert.Alert;
 import com.cloud.alert.AlertManager;
@@ -254,7 +256,7 @@ import org.apache.cloudstack.api.command.user.vmgroup.UpdateVMGroupCmd;
 import org.apache.cloudstack.api.command.user.vmsnapshot.CreateVMSnapshotCmd;
 import org.apache.cloudstack.api.command.user.vmsnapshot.DeleteVMSnapshotCmd;
 import org.apache.cloudstack.api.command.user.vmsnapshot.ListVMSnapshotCmd;
-import org.apache.cloudstack.api.command.user.vmsnapshot.RevertToSnapshotCmd;
+import org.apache.cloudstack.api.command.user.vmsnapshot.RevertToVMSnapshotCmd;
 import org.apache.cloudstack.api.command.user.zone.ListZonesByCmd;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.StoragePoolAllocator;
@@ -2256,6 +2258,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(UpdateNetworkServiceProviderCmd.class);
         cmdList.add(UpdatePhysicalNetworkCmd.class);
         cmdList.add(UpdateStorageNetworkIpRangeCmd.class);
+        cmdList.add(DedicateGuestVlanRangeCmd.class);
+        cmdList.add(ListDedicatedGuestVlanRangesCmd.class);
+        cmdList.add(ReleaseDedicatedGuestVlanRangeCmd.class);
         cmdList.add(CreateDiskOfferingCmd.class);
         cmdList.add(CreateServiceOfferingCmd.class);
         cmdList.add(DeleteDiskOfferingCmd.class);
@@ -2522,7 +2527,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ListZonesByCmd.class);
         cmdList.add(ListVMSnapshotCmd.class);
         cmdList.add(CreateVMSnapshotCmd.class);
-        cmdList.add(RevertToSnapshotCmd.class);
+        cmdList.add(RevertToVMSnapshotCmd.class);
         cmdList.add(DeleteVMSnapshotCmd.class);
         cmdList.add(AddIpToVmNicCmd.class);
         cmdList.add(RemoveIpFromVmNicCmd.class);
@@ -2542,6 +2547,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ListAffinityGroupsCmd.class);
         cmdList.add(UpdateVMAffinityGroupCmd.class);
         cmdList.add(ListAffinityGroupTypesCmd.class);
+        cmdList.add(ListNetworkIsolationMethodsCmd.class);
 
         return cmdList;
     }
@@ -3081,7 +3087,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         List<UploadVO> extractURLList = _uploadDao.listByTypeUploadStatus(volumeId, Upload.Type.VOLUME, UploadVO.Status.DOWNLOAD_URL_CREATED);
 
         if (extractMode == Upload.Mode.HTTP_DOWNLOAD && extractURLList.size() > 0) {
-            return extractURLList.get(0).getId(); // If download url already
+            return extractURLList.get(0).getId(); // If download url already  Note: volss
             // exists then return
         } else {
             UploadVO uploadJob = _uploadMonitor.createNewUploadEntry(sserver.getId(), volumeId, UploadVO.Status.COPY_IN_PROGRESS, Upload.Type.VOLUME,
@@ -3133,6 +3139,19 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
 
             String volumeLocalPath = "volumes/" + volume.getId() + "/" + cvAnswer.getVolumePath() + "." + getFormatForPool(srcPool);
+          //Fang:  volss, handle the ova special case;
+            if (getFormatForPool(srcPool) == "ova") {
+                CreateVolumeOVACommand cvOVACmd = new CreateVolumeOVACommand(secondaryStorageURL, volumeLocalPath, cvAnswer.getVolumePath(), srcPool, copyvolumewait);
+                CreateVolumeOVAAnswer  OVAanswer = null;
+
+                try {
+                        cvOVACmd.setContextParam("hypervisor", HypervisorType.VMware.toString());
+                        OVAanswer = (CreateVolumeOVAAnswer) _storageMgr.sendToPool(srcPool, cvOVACmd); //Fang: for extract volume, create the ova file here;
+
+                } catch (StorageUnavailableException e) {
+                    s_logger.debug("Storage unavailable");
+                }
+            }
             // Update the DB that volume is copied and volumePath
             uploadJob.setUploadState(UploadVO.Status.COPY_COMPLETE);
             uploadJob.setLastUpdated(new Date());

@@ -66,7 +66,7 @@ def describeResources(config):
     pn2.vlan = config.get('cloudstack', 'pnet2.vlan')
     pn2.tags = ["cloud-simulator-guest"]
     pn2.traffictypes = [traffictype('Guest', {'simulator': 'cloud-simulator-guest'})]
-    pn.isolationmethods = ["VLAN"]
+    pn2.isolationmethods = ["VLAN"]
     pn2.providers.append(vpcprovider)
     
     z.physical_networks.append(pn)

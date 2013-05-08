@@ -31,6 +31,7 @@ import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.dao.AccountVlanMapDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.dc.dao.DataCenterVnetDao;
 import com.cloud.dc.dao.PodVlanMapDao;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.deploy.DataCenterDeployment;
@@ -156,6 +157,10 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
     PodVlanMapDao _podVlanMapDao;
     @Inject
     ConfigurationServer _configServer;
+    @Inject
+    AccountGuestVlanMapDao _accountGuestVlanMapDao;
+    @Inject
+    DataCenterVnetDao _datacenterVnetDao;
 
     List<NetworkGuru> _networkGurus;
     public List<NetworkGuru> getNetworkGurus() {
@@ -369,9 +374,12 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
             VlanVO vlan = _vlanDao.findById(addr.getVlanId());
 
             String guestType = vlan.getVlanType().toString();
-            UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_ASSIGN, owner.getId(),
-                    addr.getDataCenterId(), addr.getId(), addr.getAddress().toString(), addr.isSourceNat(), guestType,
-                    addr.getSystem(), addr.getClass().getName(), addr.getUuid());
+
+            if (!isIpDedicated(addr)) {
+                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_ASSIGN, owner.getId(),
+                        addr.getDataCenterId(), addr.getId(), addr.getAddress().toString(), addr.isSourceNat(), guestType,
+                        addr.getSystem(), addr.getClass().getName(), addr.getUuid());
+            }
             // don't increment resource count for direct ip addresses
             if (addr.getAssociatedWithNetworkId() != null) {
                 _resourceLimitMgr.incrementResourceCount(owner.getId(), ResourceType.public_ip);
@@ -381,6 +389,12 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
         txn.commit();
     }
 
+    private boolean isIpDedicated(IPAddressVO addr) {
+        List<AccountVlanMapVO> maps = _accountVlanMapDao.listAccountVlanMapsByVlan(addr.getVlanId());
+        if (maps != null && !maps.isEmpty())
+            return true;
+        return false;
+    }
 
     @Override
     public PublicIp assignSourceNatIpAddressToGuestNetwork(Account owner, Network guestNetwork)
@@ -1989,8 +2003,34 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
             // For Isolated networks, don't allow to create network with vlan that already exists in the zone
             if (ntwkOff.getGuestType() == GuestType.Isolated) {
                 if (_networksDao.countByZoneAndUri(zoneId, uri) > 0) {
-                throw new InvalidParameterValueException("Network with vlan " + vlanId + " already exists in zone " + zoneId);
-            }
+                    throw new InvalidParameterValueException("Network with vlan " + vlanId + " already exists in zone " + zoneId);
+                } else {
+                    List<DataCenterVnetVO> dcVnets = _datacenterVnetDao.findVnet(zoneId, vlanId.toString());
+                    //for the network that is created as part of private gateway,
+                    //the vnet is not coming from the data center vnet table, so the list can be empty
+                    if (!dcVnets.isEmpty()) {
+                        DataCenterVnetVO dcVnet = dcVnets.get(0);
+                        // Fail network creation if specified vlan is dedicated to a different account
+                        if (dcVnet.getAccountGuestVlanMapId() != null) {
+                            Long accountGuestVlanMapId = dcVnet.getAccountGuestVlanMapId();
+                            AccountGuestVlanMapVO map = _accountGuestVlanMapDao.findById(accountGuestVlanMapId);
+                            if (map.getAccountId() != owner.getAccountId()) {
+                                throw new InvalidParameterValueException("Vlan " + vlanId + " is dedicated to a different account");
+                            }
+                        // Fail network creation if owner has a dedicated range of vlans but the specified vlan belongs to the system pool
+                        } else {
+                            List<AccountGuestVlanMapVO> maps = _accountGuestVlanMapDao.listAccountGuestVlanMapsByAccount(owner.getAccountId());
+                            if (maps != null && !maps.isEmpty()) {
+                                int vnetsAllocatedToAccount = _datacenterVnetDao.countVnetsAllocatedToAccount(zoneId, owner.getAccountId());
+                                int vnetsDedicatedToAccount = _datacenterVnetDao.countVnetsDedicatedToAccount(zoneId, owner.getAccountId());
+                                if (vnetsAllocatedToAccount < vnetsDedicatedToAccount) {
+                                    throw new InvalidParameterValueException("Specified vlan " + vlanId + " doesn't belong" +
+                                            " to the vlan range dedicated to the owner "+ owner.getAccountName());
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 // don't allow to creating shared network with given Vlan ID, if there already exists a isolated network or
                 // shared network with same Vlan ID in the zone
@@ -1999,7 +2039,10 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
                     throw new InvalidParameterValueException("There is a isolated/shared network with vlan id: " +
                             vlanId + " already exists " + "in zone " + zoneId);
                 }
-        }
+            }
+
+
+
         }
 
         // If networkDomain is not specified, take it from the global configuration
@@ -2886,14 +2929,15 @@ public class NetworkManagerImpl extends ManagerBase implements NetworkManager, L
             }
 
             // Save usage event
-            if (ip.getAllocatedToAccountId() != Account.ACCOUNT_ID_SYSTEM) {
+            if (ip.getAllocatedToAccountId() != null && ip.getAllocatedToAccountId() != Account.ACCOUNT_ID_SYSTEM) {
                 VlanVO vlan = _vlanDao.findById(ip.getVlanId());
 
                 String guestType = vlan.getVlanType().toString();
-
-                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_RELEASE,
-                        ip.getAllocatedToAccountId(), ip.getDataCenterId(), addrId, ip.getAddress().addr(),
-                        ip.isSourceNat(), guestType, ip.getSystem(), ip.getClass().getName(), ip.getUuid());
+                if (!isIpDedicated(ip)) {
+                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_NET_IP_RELEASE,
+                            ip.getAllocatedToAccountId(), ip.getDataCenterId(), addrId, ip.getAddress().addr(),
+                            ip.isSourceNat(), guestType, ip.getSystem(), ip.getClass().getName(), ip.getUuid());
+                }
             }
 
             ip = _ipAddressDao.markAsUnavailable(addrId);
