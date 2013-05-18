@@ -67,11 +67,7 @@ public class XcpServerResource extends CitrixResourceBase {
 
     @Override
     protected String getGuestOsType(String stdType, boolean bootFromCD) {
-        if (getVersion() != null && getVersion().startsWith("1.6")) {
-            return CitrixHelper.getXcp160GuestOsType(stdType);
-        } else {
-            return CitrixHelper.getXcpGuestOsType(stdType);
-        }
+        return CitrixHelper.getXcpGuestOsType(stdType);
     }
 
     @Override
@@ -103,18 +99,5 @@ public class XcpServerResource extends CitrixResourceBase {
             s_logger.warn("Failed to get network usage stats due to ", ex);
             return new NetworkUsageAnswer(cmd, ex);
         }
-    }
-
-    /**
-     * Sets the product version of the xen cloud platform.
-     * Used to determine guestOS types supported on the hypervisor
-     * @param version 1.1, 1.0, 1.4, 1.6 etc
-     */
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getVersion() {
-        return this.version;
     }
 }

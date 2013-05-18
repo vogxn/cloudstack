@@ -47,6 +47,7 @@ import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.xen.resource.CitrixResourceBase;
 import com.cloud.hypervisor.xen.resource.XcpOssResource;
+import com.cloud.hypervisor.xen.resource.XcpServer16Resource;
 import com.cloud.hypervisor.xen.resource.XcpServerResource;
 import com.cloud.hypervisor.xen.resource.XenServer56FP1Resource;
 import com.cloud.hypervisor.xen.resource.XenServer56Resource;
@@ -432,11 +433,10 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
                         || prodVersion.equals("1.1.0")
                         || prodVersion.equals("5.6.100")
                         || prodVersion.startsWith("1.4")
-                        || prodVersion.startsWith("1.6")
         )) {
-            XcpServerResource xcpresource = new XcpServerResource();
-            xcpresource.setVersion(prodVersion);
-            return xcpresource;
+            return new XcpServerResource();
+        } else if (prodBrand.equals("XCP") && prodVersion.startsWith("1.6")) {
+            return new XcpServer16Resource();
         }
 
         // Citrix Xenserver group of hypervisors
