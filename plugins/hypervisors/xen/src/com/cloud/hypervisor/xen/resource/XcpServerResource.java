@@ -36,8 +36,8 @@ import java.util.List;
 
 @Local(value=ServerResource.class)
 public class XcpServerResource extends CitrixResourceBase {
-	  private final static Logger s_logger = Logger.getLogger(XcpServerResource.class);
-	  private String version;
+    private final static Logger s_logger = Logger.getLogger(XcpServerResource.class);
+    private String version;
 
     public XcpServerResource() {
         super();
@@ -67,7 +67,7 @@ public class XcpServerResource extends CitrixResourceBase {
 
     @Override
     protected String getGuestOsType(String stdType, boolean bootFromCD) {
-        if (getVersion().startsWith("1.6")) {
+        if (getVersion() != null && getVersion().startsWith("1.6")) {
             return CitrixHelper.getXcp160GuestOsType(stdType);
         } else {
             return CitrixHelper.getXcpGuestOsType(stdType);
