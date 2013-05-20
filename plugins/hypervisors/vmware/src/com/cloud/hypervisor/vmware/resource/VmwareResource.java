@@ -139,6 +139,7 @@ import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
 import com.cloud.agent.api.storage.CreateVolumeOVACommand;
 import com.cloud.agent.api.storage.CreateVolumeOVAAnswer;
+import com.cloud.agent.api.storage.MigrateVolumeAnswer;
 import com.cloud.agent.api.storage.MigrateVolumeCommand;
 import com.cloud.agent.api.storage.PrepareOVAPackingAnswer;
 import com.cloud.agent.api.storage.PrepareOVAPackingCommand;
@@ -265,9 +266,6 @@ import com.vmware.vim25.VirtualMachineRelocateSpecDiskLocator;
 import com.vmware.vim25.VirtualMachineRuntimeInfo;
 import com.vmware.vim25.VirtualSCSISharing;
 
-import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
-import org.apache.cloudstack.engine.subsystem.api.storage.VolumeInfo;
-import org.apache.cloudstack.engine.subsystem.api.storage.type.VolumeType;
 import org.apache.log4j.Logger;
 import org.apache.log4j.NDC;
 
@@ -3531,8 +3529,63 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
 
     private Answer execute(MigrateVolumeCommand cmd) {
+        String volumePath = cmd.getVolumePath();
+        StorageFilerTO poolTo = cmd.getPool();
 
-        return null;
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource MigrateVolumeCommand: " + _gson.toJson(cmd));
+        }
+
+        VmwareContext context = getServiceContext();
+        VmwareManager mgr = context.getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
+        final String vmName = mgr.getVmName(cmd.getVolumeId());
+
+        VirtualMachineMO vmMo = null;
+        VmwareHypervisorHost srcHyperHost = null;
+
+        ManagedObjectReference morDs = null;
+        ManagedObjectReference morDc = null;
+        VirtualMachineRelocateSpec relocateSpec = new VirtualMachineRelocateSpec();
+        List<VirtualMachineRelocateSpecDiskLocator> diskLocators = new ArrayList<VirtualMachineRelocateSpecDiskLocator>();
+        VirtualMachineRelocateSpecDiskLocator diskLocator = null;
+
+        String srcDiskName = "";
+        String srcDsName = "";
+
+        try {
+            srcHyperHost = getHyperHost(getServiceContext());
+            morDc = srcHyperHost.getHyperHostDatacenter();
+            srcDsName = mgr.getStoragePoolOfVolume(cmd.getVolumeId());
+
+            // find VM through datacenter (VM is not at the target host yet)
+            vmMo = srcHyperHost.findVmOnPeerHyperHost(vmName);
+            if (vmMo == null) {
+                String msg = "VM " + vmName + " does not exist in VMware datacenter " + morDc.getValue();
+                s_logger.error(msg);
+                throw new Exception(msg);
+            }
+
+            srcDiskName = String.format("[%s] %s.vmdk", srcDsName, volumePath);
+            diskLocator = new VirtualMachineRelocateSpecDiskLocator();
+            diskLocator.setDatastore(morDs);
+            diskLocator.setDiskId(getVirtualDiskInfo(vmMo, srcDiskName));
+
+            diskLocators.add(diskLocator);
+            relocateSpec.getDisk().add(diskLocator);
+
+            // Change datastore
+            if (!vmMo.changeDatastore(relocateSpec)) {
+                throw new Exception("Change datastore operation failed during volume migration");
+            } else {
+                s_logger.debug("Successfully migrated volume " + vmName + " to target datastore");
+            }
+
+            return new MigrateVolumeAnswer(cmd, true, null, volumePath);
+        } catch (Exception e) {
+            String msg = "Catch Exception " + e.getClass().getName() + " due to " + e.toString();
+            s_logger.error(msg, e);
+            return new MigrateVolumeAnswer(cmd, false, msg, null);
+        }
     }
 
     private int getVirtualDiskInfo(VirtualMachineMO vmMo, String srcDiskName) throws Exception {

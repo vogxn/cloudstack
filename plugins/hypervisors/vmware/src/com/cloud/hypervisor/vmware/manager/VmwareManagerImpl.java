@@ -35,6 +35,8 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
+import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreRole;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
@@ -45,6 +47,8 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.agent.api.storage.MigrateVolumeAnswer;
+import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.cluster.ClusterManager;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
@@ -79,6 +83,9 @@ import com.cloud.serializer.GsonHelper;
 import com.cloud.server.ConfigurationServer;
 import com.cloud.storage.JavaStorageLayer;
 import com.cloud.storage.StorageLayer;
+import com.cloud.storage.StoragePool;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.secondary.SecondaryStorageVmManager;
 import com.cloud.utils.FileUtil;
 import com.cloud.utils.NumbersUtil;
@@ -92,6 +99,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SshHelper;
 import com.cloud.vm.DomainRouterVO;
+import com.cloud.vm.VMInstanceVO;
+import com.cloud.vm.dao.VMInstanceDao;
 import com.google.gson.Gson;
 import com.vmware.vim25.AboutInfo;
 import com.vmware.vim25.HostConnectSpec;
@@ -124,6 +133,9 @@ public class VmwareManagerImpl extends ManagerBase implements VmwareManager, Vmw
     @Inject ConfigurationDao _configDao;
     @Inject ConfigurationServer _configServer;
     @Inject HypervisorCapabilitiesDao _hvCapabilitiesDao;
+    @Inject VMInstanceDao _vmDao;
+    @Inject VolumeDao _volDao;
+    @Inject DataStoreManager dataStoreMgr;
 
     String _mountParent;
     StorageLayer _storage;
@@ -864,5 +876,24 @@ public class VmwareManagerImpl extends ManagerBase implements VmwareManager, Vmw
     @Override
     public String getRootDiskController() {
         return _rootDiskController;
+    }
+
+    @Override
+    public String getVmName(long volumeId) {
+        Long instanceId;
+        VolumeVO vol = _volDao.findById(volumeId);
+        instanceId = vol.getInstanceId();
+        VMInstanceVO vmInstance = null;
+        if (instanceId != null) {
+            vmInstance = _vmDao.findById(instanceId);
+        }
+        return vmInstance.getInstanceName();
+    }
+
+    @Override
+    public String getStoragePoolOfVolume(long volumeId) {
+        VolumeVO vol = _volDao.findById(volumeId);
+        long poolId = vol.getPoolId();
+        return dataStoreMgr.getPrimaryDataStore(poolId).getUuid();
     }
 }
