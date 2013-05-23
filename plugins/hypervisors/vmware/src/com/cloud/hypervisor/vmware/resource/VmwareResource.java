@@ -3608,16 +3608,24 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
         String srcDiskName = "";
         String srcDsName = "";
+        String tgtDsName = "";
 
         try {
             srcHyperHost = getHyperHost(getServiceContext());
             morDc = srcHyperHost.getHyperHostDatacenter();
             srcDsName = mgr.getStoragePoolOfVolume(cmd.getVolumeId());
+            tgtDsName = poolTo.getUuid().replace("-", "");
 
             // find VM through datacenter (VM is not at the target host yet)
             vmMo = srcHyperHost.findVmOnPeerHyperHost(vmName);
             if (vmMo == null) {
                 String msg = "VM " + vmName + " does not exist in VMware datacenter " + morDc.getValue();
+                s_logger.error(msg);
+                throw new Exception(msg);
+            }
+            morDs = HypervisorHostHelper.findDatastoreWithBackwardsCompatibility(srcHyperHost, tgtDsName);
+            if (morDs == null) {
+                String msg = "Unable to find the mounted datastore with name " + tgtDsName + " to execute MigrateVolumeCommand";
                 s_logger.error(msg);
                 throw new Exception(msg);
             }
@@ -3634,7 +3642,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             if (!vmMo.changeDatastore(relocateSpec)) {
                 throw new Exception("Change datastore operation failed during volume migration");
             } else {
-                s_logger.debug("Successfully migrated volume " + vmName + " to target datastore");
+                s_logger.debug("Successfully migrated volume " + volumePath + " to target datastore " + tgtDsName);
             }
 
             return new MigrateVolumeAnswer(cmd, true, null, volumePath);
