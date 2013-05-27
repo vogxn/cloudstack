@@ -328,7 +328,9 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
 						workerVm = vmMo;
 
 						// attach volume to worker VM
-						String datastoreVolumePath = String.format("[%s] %s.vmdk", dsMo.getName(), volumePath);
+                        String datastoreVolumePath = dsMo.searchFileInSubFolders(volumePath + ".vmdk", true);
+                        assert (datastoreVolumePath != null) : "Virtual disk file must be present in the datastore to attach it to VM.";
+
 						vmMo.attachDisk(new String[] { datastoreVolumePath }, morDs);
 					}
 				}
@@ -1059,7 +1061,9 @@ public class VmwareStorageManagerImpl implements VmwareStorageManager {
                 }
 
                 //attach volume to worker VM
-                String datastoreVolumePath = String.format("[%s] %s.vmdk", dsMo.getName(), volumePath);
+                String datastoreVolumePath = dsMo.searchFileInSubFolders(volumePath + ".vmdk", true);
+                assert (datastoreVolumePath != null) : "Virtual disk file must be present in the datastore to attach it to VM.";
+
                 workerVm.attachDisk(new String[] { datastoreVolumePath }, morDs);
                 vmMo = workerVm;
             }

@@ -259,6 +259,7 @@ import com.vmware.vim25.DatastoreSummary;
 import com.vmware.vim25.DynamicProperty;
 import com.vmware.vim25.GuestInfo;
 import com.vmware.vim25.HostCapability;
+import com.vmware.vim25.HostDatastoreBrowserSearchResults;
 import com.vmware.vim25.HostFirewallInfo;
 import com.vmware.vim25.HostFirewallRuleset;
 import com.vmware.vim25.HostNetworkTrafficShapingPolicy;
@@ -3773,7 +3774,8 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             }
 
             DatastoreMO dsMo = new DatastoreMO(getServiceContext(), morDs);
-            String datastoreVolumePath = String.format("[%s] %s.vmdk", dsMo.getName(), cmd.getVolumePath());
+            String datastoreVolumePath = dsMo.searchFileInSubFolders(cmd.getVolumePath() + ".vmdk", true);
+            assert (datastoreVolumePath != null) : "Virtual disk file must exist in specified datastore for attach/detach operations.";
 
             AttachVolumeAnswer answer = new AttachVolumeAnswer(cmd, cmd.getDeviceId());
             if (cmd.getAttach()) {
