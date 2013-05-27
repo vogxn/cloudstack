@@ -172,8 +172,8 @@ public class VmwareStorageMotionStrategy implements DataMotionStrategy {
                 volumeToFilerto.put(volumeTo, filerTo);
             }
 
-            MigrateWithStorageCommand command = new MigrateWithStorageCommand(to, volumeToFilerto);
-            MigrateWithStorageAnswer answer = (MigrateWithStorageAnswer) agentMgr.send(destHost.getId(), command);
+            MigrateWithStorageCommand command = new MigrateWithStorageCommand(to, volumeToFilerto, destHost.getGuid());
+            MigrateWithStorageAnswer answer = (MigrateWithStorageAnswer) agentMgr.send(srcHost.getId(), command);
             if (answer == null) {
                 s_logger.error("Migration with storage of vm " + vm + " failed.");
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
